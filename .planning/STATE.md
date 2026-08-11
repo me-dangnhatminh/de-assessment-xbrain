@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: auditable-log-pipeline-analysis
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-08-11T03:30:17.006Z"
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-08-11T03:47:35.578Z"
 last_activity: 2026-08-11
 last_activity_desc: Initial four-phase MVP roadmap created with all 55 v1 requirements mapped.
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 6
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -28,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 ## Current Position
 
 Phase: 01 (auditable-log-pipeline-analysis) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-08-11 — Phase 01 execution started
 
-Progress: [███░░░░░░░] 33%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [███░░░░░░░] 33%
 |------|----------|-------|-------|
 | Phase 01 P01 | 4 min | 2 tasks | 7 files |
 | Phase 01 P02 | 4 min | 2 tasks | 5 files |
+| Phase 01 P03 | 14 min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Enforce INFO, WARN, and ERROR while allowing any non-empty service because no authoritative service allowlist exists.
 - [Phase 01]: Use complete canonical-record digests for exact duplicate detection and cross-reference the first source line.
 - [Phase 01]: Keep REPAIR explicit but report zero canonical repairs unless a lossless, mechanically provable policy applies.
+- [Phase 01]: Use a sorted full supplied-file SHA-256 inventory before and after each run to prove immutable-source integrity.
+- [Phase 01]: Publish only ACCEPT and REPAIR rows to source-line-ordered typed Parquet; retain every physical source line in the ledger.
 
 ### Pending Todos
 
@@ -94,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-11T03:30:16.982Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-08-11T03:47:35.557Z
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None
