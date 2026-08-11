@@ -131,6 +131,63 @@ def test_manifest_build_and_verification_are_repeatable(tmp_path: Path) -> None:
     assert {path: path.read_bytes() for path in before} == before
 
 
+def test_manifest_verification_rejects_falsified_source_parquet_count_after_rebuild(
+    tmp_path: Path,
+) -> None:
+    """A rebuilt manifest cannot authenticate a false source Parquet row count."""
+    output_root = tmp_path / "output"
+    _build_evidence(output_root)
+
+    source_manifest_path = output_root / "evidence/phase1/source_manifest.json"
+    source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
+    source_manifest["row_counts"]["parquet"] += 1
+    source_manifest_path.write_text(json.dumps(source_manifest, sort_keys=True), encoding="utf-8")
+    build_run_manifest(output_root)
+
+    with pytest.raises(ManifestVerificationError, match="row_counts.parquet"):
+        verify_run_manifest(output_root)
+
+
+def test_manifest_verification_derives_ledger_action_conservation(tmp_path: Path) -> None:
+    """Verification derives disposition totals from ledger entries instead of manifests."""
+    output_root = tmp_path / "output"
+    _build_evidence(output_root)
+    ledger_path = output_root / "evidence/phase1/quality_ledger.jsonl"
+    entries = [json.loads(line) for line in ledger_path.read_text(encoding="utf-8").splitlines()]
+    entries[0]["final_action"] = "REJECT"
+    ledger_path.write_text(
+        "".join(json.dumps(entry, sort_keys=True) + "\n" for entry in entries), encoding="utf-8"
+    )
+    build_run_manifest(output_root)
+
+    with pytest.raises(ManifestVerificationError, match="row_counts.accept"):
+        verify_run_manifest(output_root)
+
+
+@pytest.mark.parametrize(
+    ("relative_path", "content", "match"),
+    [
+        ("evidence/phase1/quality_ledger.jsonl", "not json\n", "quality ledger"),
+        ("evidence/phase1/quality_ledger.jsonl", "[]\n", "quality ledger"),
+        ("evidence/phase1/quality_ledger.jsonl", "{}\n", "quality ledger"),
+        ("processed/logs_clean.parquet", "not parquet", "Parquet"),
+    ],
+)
+def test_manifest_verification_rejects_malformed_live_conservation_evidence(
+    tmp_path: Path, relative_path: str, content: str, match: str
+) -> None:
+    """Malformed ledger and Parquet evidence fail closed instead of defaulting counts."""
+    output_root = tmp_path / "output"
+    _build_evidence(output_root)
+    target = output_root / relative_path
+    target.write_text(content, encoding="utf-8")
+    if target.suffix == ".jsonl":
+        build_run_manifest(output_root)
+
+    with pytest.raises(ManifestVerificationError, match=match):
+        verify_run_manifest(output_root)
+
+
 def test_manifest_verification_rejects_forged_source_inventory_after_rebuild(
     tmp_path: Path,
 ) -> None:
