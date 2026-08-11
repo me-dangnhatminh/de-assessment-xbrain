@@ -31,7 +31,7 @@ Deliver a reviewer-defensible assessment submission in four vertical slices: fir
   3. A reviewer can rerun the pipeline and obtain row-conserving, deterministic cleaned Parquet data with a documented schema and a concise format rationale.
   4. A reviewer can rerun checked-in analysis and inspect recorded evidence for the highest-error service, daily error pattern, common normalized errors, and reconciled repaired/rejected counts without relying on manual calculations.
 
-**Plans**: 4/6 plans executed
+**Plans**: 5/6 plans executed
 
 Plans:
 **Wave 1**
@@ -52,7 +52,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 01-05-PLAN.md — Complete top-error and quality-reconciliation SQL with the full four-table evidence set.
+- [x] 01-05-PLAN.md — Complete top-error and quality-reconciliation SQL with the full four-table evidence set.
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
@@ -112,7 +112,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auditable Log Pipeline & Analysis | 4/6 | In Progress|  |
+| 1. Auditable Log Pipeline & Analysis | 5/6 | In Progress|  |
 | 2. Version-Aware Knowledge Base & Evaluation | 0/TBD | Not started | - |
 | 3. AWS Design & Bedrock Extraction Evidence | 0/TBD | Not started | - |
 | 4. Reviewer-Ready Submission & Handoff | 0/TBD | Not started | - |
