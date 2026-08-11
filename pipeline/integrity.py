@@ -64,3 +64,24 @@ def validate_output_root(output_root: Path, supplied_root: Path = SUPPLIED_ROOT)
     raise SourceIntegrityError(
         f"output root must be outside immutable supplied inputs: {resolved_supplied}"
     )
+
+
+def authorize_output_path(
+    output_root: Path, target: Path, supplied_root: Path = SUPPLIED_ROOT
+) -> Path:
+    """Resolve one generated write/cleanup target and reject symlink escapes.
+
+    The output-root guard alone is insufficient: a descendant symlink inside
+    the root can redirect a writer or unlinker to a file outside it. Resolving
+    the final target follows every existing symlink component, so any path that
+    escapes the approved root fails closed before it is opened or unlinked.
+    """
+    resolved_output = validate_output_root(output_root, supplied_root)
+    resolved_target = target.expanduser().resolve(strict=False)
+    try:
+        resolved_target.relative_to(resolved_output)
+    except ValueError as error:
+        raise SourceIntegrityError(
+            f"generated path escapes the resolved output root: {target}"
+        ) from error
+    return resolved_target

@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+from pipeline.integrity import authorize_output_path
 from pipeline.manifest import MANIFEST_PATH, ManifestVerificationError
 
 
@@ -114,7 +115,7 @@ def render_report(output_root: Path) -> Path:
         "",
         "The unusual-day rule is descriptive only, and service contributions are evidence of distribution rather than root cause. This Phase 1 artifact does not make causal or statistical claims, deploy AWS infrastructure, or provide knowledge-base answers.",
     ]
-    report_path = evidence_root / "report.md"
+    report_path = authorize_output_path(resolved_root, evidence_root / "report.md")
     report_path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         dir=report_path.parent, delete=False, encoding="utf-8", mode="w"

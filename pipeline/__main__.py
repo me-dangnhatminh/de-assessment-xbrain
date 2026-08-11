@@ -22,6 +22,7 @@ from pipeline.integrity import (
     CANONICAL_LOG_INPUT,
     SourceIntegrityError,
     assert_source_unchanged,
+    authorize_output_path,
     inventory_supplied_inputs,
     require_canonical_log_input,
 )
@@ -94,6 +95,11 @@ def validate_output_root(output_root: Path) -> Path:
         return validate_generated_output_root(output_root)
     except SourceIntegrityError as error:
         raise TraceError(str(error)) from error
+
+
+def generated_path(output_root: Path, relative: Path | str) -> Path:
+    """Resolve and authorize one generated artifact before it is written or unlinked."""
+    return authorize_output_path(output_root, output_root / relative)
 
 
 def select_source_line(
@@ -245,9 +251,9 @@ def cmd_trace(arguments: argparse.Namespace) -> int:
         raw_line, arguments.source_line, source_sha256_before
     )
     ledger_row["source_path"] = str(input_path)
-    ledger_path = output_root / "quality_ledger.jsonl"
-    parquet_path = output_root / "trace.parquet"
-    result_path = output_root / "tables/00_tracer_service_error_counts.csv"
+    ledger_path = generated_path(output_root, "quality_ledger.jsonl")
+    parquet_path = generated_path(output_root, "trace.parquet")
+    result_path = generated_path(output_root, "tables/00_tracer_service_error_counts.csv")
     atomic_write_bytes(ledger_path, (canonical_json(ledger_row) + "\n").encode("utf-8"))
     write_parquet_atomic(parquet_path, clean_record)
     result_row_count = write_service_counts(parquet_path, result_path)
@@ -290,7 +296,8 @@ def cmd_trace(arguments: argparse.Namespace) -> int:
         },
     }
     atomic_write_bytes(
-        output_root / "trace_manifest.json", (canonical_json(manifest) + "\n").encode("utf-8")
+        generated_path(output_root, "trace_manifest.json"),
+        (canonical_json(manifest) + "\n").encode("utf-8"),
     )
     return 0
 
@@ -345,7 +352,9 @@ def cmd_validate(arguments: argparse.Namespace) -> int:
     if source_sha256_after != source_sha256_before:
         raise TraceError("input source changed during validation")
     ledger_content = "".join(canonical_json(entry.as_dict()) + "\n" for entry in ledger_entries)
-    atomic_write_bytes(output_root / "quality_ledger.jsonl", ledger_content.encode("utf-8"))
+    atomic_write_bytes(
+        generated_path(output_root, "quality_ledger.jsonl"), ledger_content.encode("utf-8")
+    )
     return 0
 
 
@@ -440,6 +449,7 @@ def clean_generated_outputs(output_root: Path) -> None:
         raise SourceIntegrityError("clean refuses the repository root and supplied source tree")
     for relative_path in GENERATED_PHASE1_PATHS:
         target = resolved_root / relative_path
+        authorize_output_path(resolved_root, target)
         if target.is_file() or target.is_symlink():
             target.unlink()
     for directory in (
@@ -448,6 +458,7 @@ def clean_generated_outputs(output_root: Path) -> None:
         resolved_root / "evidence",
         resolved_root / "processed",
     ):
+        authorize_output_path(resolved_root, directory)
         if directory.is_dir() and not any(directory.iterdir()):
             directory.rmdir()
 
@@ -470,10 +481,10 @@ def cmd_run(arguments: argparse.Namespace) -> int:
     if input_count != sum(final_actions.values()) or analytical_count != len(clean_records):
         raise TraceError("row conservation failed before evidence publication")
 
-    ledger_path = output_root / "evidence/phase1/quality_ledger.jsonl"
-    schema_path = output_root / "evidence/phase1/schema.json"
-    manifest_path = output_root / "evidence/phase1/source_manifest.json"
-    parquet_path = output_root / "processed/logs_clean.parquet"
+    ledger_path = generated_path(output_root, "evidence/phase1/quality_ledger.jsonl")
+    schema_path = generated_path(output_root, "evidence/phase1/schema.json")
+    manifest_path = generated_path(output_root, "evidence/phase1/source_manifest.json")
+    parquet_path = generated_path(output_root, "processed/logs_clean.parquet")
     write_jsonl_atomic(ledger_path, (entry.as_dict() for entry in ledger_entries))
     write_schema(schema_path)
     write_many_parquet_atomic(parquet_path, clean_records)

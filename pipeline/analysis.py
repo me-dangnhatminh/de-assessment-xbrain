@@ -7,7 +7,7 @@ from pathlib import Path
 
 import duckdb
 
-from pipeline.integrity import SourceIntegrityError, validate_output_root
+from pipeline.integrity import SourceIntegrityError, authorize_output_path, validate_output_root
 from pipeline.write_outputs import write_csv_atomic
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -131,7 +131,7 @@ def run_analysis(analysis_id: str, *, parquet_path: Path, output_root: Path) -> 
             )
         rows = result.fetchall()
 
-    result_path = generated_root / spec.result_path
+    result_path = authorize_output_path(generated_root, generated_root / spec.result_path)
     write_csv_atomic(result_path, spec.expected_columns, rows)
     return result_path
 

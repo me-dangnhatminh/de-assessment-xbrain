@@ -94,6 +94,52 @@ def test_clean_generated_outputs_is_limited_to_known_paths(tmp_path: Path) -> No
         clean_generated_outputs(REPOSITORY_ROOT / "docs/onboard")
 
 
+def test_run_rejects_symlinked_evidence_dir_aimed_at_supplied_tree(tmp_path: Path) -> None:
+    """A descendant evidence symlink to docs/onboard fails before any write occurs."""
+    output_root = tmp_path / "generated"
+    output_root.mkdir()
+    (output_root / "evidence").symlink_to(REPOSITORY_ROOT / "docs/onboard", target_is_directory=True)
+    before = inventory_supplied_inputs()
+
+    result = main(["run", "--input", str(SOURCE), "--output-root", str(output_root)])
+
+    assert result != 0
+    assert inventory_supplied_inputs() == before
+    assert not (REPOSITORY_ROOT / "docs/onboard/phase1/quality_ledger.jsonl").exists()
+
+
+def test_run_rejects_symlinked_processed_dir_to_outside_location(tmp_path: Path) -> None:
+    """A descendant processed symlink to an outside directory never receives Parquet."""
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    output_root = tmp_path / "generated"
+    output_root.mkdir()
+    (output_root / "processed").symlink_to(outside, target_is_directory=True)
+
+    result = main(["run", "--input", str(SOURCE), "--output-root", str(output_root)])
+
+    assert result != 0
+    assert list(outside.iterdir()) == []
+
+
+def test_clean_generated_outputs_rejects_symlink_escape(tmp_path: Path) -> None:
+    """Cleanup fails closed instead of unlinking through a symlinked ancestor."""
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "quality_ledger.jsonl").write_text("keep", encoding="utf-8")
+    output_root = tmp_path / "generated"
+    output_root.mkdir()
+    (output_root / "evidence").symlink_to(outside, target_is_directory=True)
+    before = inventory_supplied_inputs()
+
+    with pytest.raises(SourceIntegrityError):
+        clean_generated_outputs(output_root)
+
+    assert (output_root / "evidence").is_symlink()
+    assert (outside / "quality_ledger.jsonl").read_text(encoding="utf-8") == "keep"
+    assert inventory_supplied_inputs() == before
+
+
 def test_makefile_and_readme_publish_the_locked_reviewer_path() -> None:
     """The canonical command and honest Phase 1 operating boundaries are documented."""
     makefile = (REPOSITORY_ROOT / "Makefile").read_text(encoding="utf-8")

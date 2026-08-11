@@ -17,6 +17,7 @@ from pipeline.analysis import ANALYSIS_SPECS
 from pipeline.integrity import (
     CANONICAL_LOG_INPUT,
     SUPPLIED_ROOT,
+    authorize_output_path,
     inventory_supplied_inputs,
     sha256_file,
     validate_output_root,
@@ -216,7 +217,7 @@ def build_run_manifest(output_root: Path) -> dict[str, Any]:
     """Build and atomically publish the deterministic Phase 1 evidence graph."""
     resolved_root = validate_output_root(output_root)
     manifest = _manifest_payload(resolved_root)
-    write_json_atomic(resolved_root / MANIFEST_PATH, manifest)
+    write_json_atomic(authorize_output_path(resolved_root, resolved_root / MANIFEST_PATH), manifest)
     return manifest
 
 
