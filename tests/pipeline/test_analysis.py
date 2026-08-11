@@ -7,6 +7,7 @@ import hashlib
 from pathlib import Path
 
 import duckdb
+import pytest
 
 from pipeline.__main__ import main
 from pipeline.analysis import ANALYSIS_SPECS, run_analysis
@@ -101,6 +102,24 @@ def test_service_error_counts_binds_parquet_path_without_sql_interpolation() -> 
 
     assert "read_parquet(?)" in sql
     assert str(PARQUET) not in sql
+
+
+def test_analysis_registry_rejects_an_explicit_unimplemented_query(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """An explicit future ID fails instead of silently omitting evidence."""
+    result = main(
+        [
+            "analyze",
+            "--analysis-id",
+            "top-normalized-errors",
+            "--output-root",
+            str(tmp_path / "output"),
+        ]
+    )
+
+    assert result == 2
+    assert "not implemented yet" in capsys.readouterr().err
 
 
 def test_daily_error_counts_uses_seven_utc_dates_and_cleaned_error_rows(tmp_path: Path) -> None:
