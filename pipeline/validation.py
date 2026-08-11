@@ -45,6 +45,10 @@ ISSUE_POLICIES = {
         Disposition.ACCEPT,
         "unexpected field is retained in raw provenance but ignored analytically",
     ),
+    "EXACT_DUPLICATE": IssuePolicy(
+        Disposition.REJECT,
+        "canonical full-record digest was first retained at an earlier source line",
+    ),
     "SYNTHETIC_REPAIR": IssuePolicy(
         Disposition.REPAIR,
         "synthetic test-only example of a lossless, unambiguous, mechanically provable repair",

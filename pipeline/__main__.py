@@ -17,7 +17,7 @@ import duckdb
 
 from pipeline.ingest import canonical_record_digest, iter_source_lines, parse_json_line
 from pipeline.models import LedgerEntry
-from pipeline.validation import choose_final_action, validate_record
+from pipeline.validation import choose_final_action, make_issue, validate_record
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = REPOSITORY_ROOT / "docs/onboard/datapack/data/app_logs_7days.jsonl"
@@ -269,6 +269,7 @@ def cmd_validate(arguments: argparse.Namespace) -> int:
     output_root = validate_output_root(Path(arguments.output_root))
     source_sha256_before = sha256_file(input_path)
     ledger_entries: list[LedgerEntry] = []
+    first_source_line_by_digest: dict[str, int] = {}
     try:
         envelopes = iter_source_lines(input_path, arguments.max_line_bytes)
         for envelope in envelopes:
@@ -276,8 +277,22 @@ def cmd_validate(arguments: argparse.Namespace) -> int:
             if record is not None:
                 issues = (*issues, *validate_record(record))
                 record_digest = canonical_record_digest(record)
+                retained_source_line = first_source_line_by_digest.setdefault(
+                    record_digest, envelope.source_line
+                )
+                if retained_source_line != envelope.source_line:
+                    issues = (
+                        *issues,
+                        make_issue(
+                            "EXACT_DUPLICATE",
+                            None,
+                            record_digest,
+                            retained_source_line,
+                        ),
+                    )
             else:
                 record_digest = None
+                retained_source_line = None
             ledger_entries.append(
                 LedgerEntry(
                     source_path=envelope.source_path,
@@ -288,7 +303,7 @@ def cmd_validate(arguments: argparse.Namespace) -> int:
                     issues=issues,
                     normalizations=(),
                     final_action=choose_final_action(issues),
-                    retained_source_line=envelope.source_line,
+                    retained_source_line=retained_source_line,
                 )
             )
     except (FileNotFoundError, ValueError) as error:
