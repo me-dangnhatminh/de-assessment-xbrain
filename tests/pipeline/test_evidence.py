@@ -70,6 +70,54 @@ def test_manifest_is_deterministic_and_links_every_evidence_artifact(tmp_path: P
         } <= set(analysis)
 
 
+def test_manifest_verification_accepts_matching_live_source_inventory(tmp_path: Path) -> None:
+    """Verification accepts evidence whose two saved inventories match live supplied bytes."""
+    output_root = tmp_path / "output"
+    _build_evidence(output_root)
+    build_run_manifest(output_root)
+
+    verify_run_manifest(output_root)
+
+
+def test_manifest_verification_rejects_forged_source_inventory_after_rebuild(
+    tmp_path: Path,
+) -> None:
+    """Rebuilt derived metadata cannot authenticate a forged source inventory."""
+    output_root = tmp_path / "output"
+    _build_evidence(output_root)
+    build_run_manifest(output_root)
+
+    source_manifest_path = output_root / "evidence/phase1/source_manifest.json"
+    source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
+    source_manifest["source_inventory"][0]["sha256"] = "0" * 64
+    source_manifest_path.write_text(
+        json.dumps(source_manifest, sort_keys=True), encoding="utf-8"
+    )
+    build_run_manifest(output_root)
+
+    with pytest.raises(ManifestVerificationError, match="source manifest source_inventory"):
+        verify_run_manifest(output_root)
+
+
+def test_manifest_verification_requires_three_way_source_inventory_equality(
+    tmp_path: Path,
+) -> None:
+    """Live bytes must match each persisted inventory, not only one saved layer."""
+    output_root = tmp_path / "output"
+    _build_evidence(output_root)
+    build_run_manifest(output_root)
+
+    source_manifest_path = output_root / "evidence/phase1/source_manifest.json"
+    source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
+    source_manifest["source_inventory"][0]["sha256"] = "0" * 64
+    source_manifest_path.write_text(
+        json.dumps(source_manifest, sort_keys=True), encoding="utf-8"
+    )
+
+    with pytest.raises(ManifestVerificationError, match="source manifest source_inventory"):
+        verify_run_manifest(output_root)
+
+
 def test_report_renders_only_generated_table_values_and_direct_evidence_links(
     tmp_path: Path,
 ) -> None:
