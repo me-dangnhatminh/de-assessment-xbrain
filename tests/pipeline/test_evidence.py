@@ -90,9 +90,7 @@ def test_manifest_verification_rejects_forged_source_inventory_after_rebuild(
     source_manifest_path = output_root / "evidence/phase1/source_manifest.json"
     source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
     source_manifest["source_inventory"][0]["sha256"] = "0" * 64
-    source_manifest_path.write_text(
-        json.dumps(source_manifest, sort_keys=True), encoding="utf-8"
-    )
+    source_manifest_path.write_text(json.dumps(source_manifest, sort_keys=True), encoding="utf-8")
     build_run_manifest(output_root)
 
     with pytest.raises(ManifestVerificationError, match="source manifest source_inventory"):
@@ -110,9 +108,7 @@ def test_manifest_verification_requires_three_way_source_inventory_equality(
     source_manifest_path = output_root / "evidence/phase1/source_manifest.json"
     source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
     source_manifest["source_inventory"][0]["sha256"] = "0" * 64
-    source_manifest_path.write_text(
-        json.dumps(source_manifest, sort_keys=True), encoding="utf-8"
-    )
+    source_manifest_path.write_text(json.dumps(source_manifest, sort_keys=True), encoding="utf-8")
 
     with pytest.raises(ManifestVerificationError, match="source manifest source_inventory"):
         verify_run_manifest(output_root)

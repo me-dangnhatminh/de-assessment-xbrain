@@ -13,7 +13,7 @@ from typing import Any
 import duckdb
 
 from pipeline.analysis import ANALYSIS_SPECS
-from pipeline.integrity import sha256_file, validate_output_root
+from pipeline.integrity import inventory_supplied_inputs, sha256_file, validate_output_root
 from pipeline.write_outputs import write_json_atomic
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -165,8 +165,29 @@ def build_run_manifest(output_root: Path) -> dict[str, Any]:
     return manifest
 
 
-def _verify_row_counts(manifest: dict[str, Any], output_root: Path) -> None:
-    source_manifest = _read_json(output_root / "evidence/phase1/source_manifest.json")
+def _verify_source_inventory(manifest: dict[str, Any], source_manifest: dict[str, Any]) -> None:
+    """Require live supplied bytes to agree with both persisted inventory layers."""
+    source_inventory = source_manifest.get("source_inventory")
+    run_inventory = manifest.get("source_inventory")
+    if not isinstance(source_inventory, list):
+        raise ManifestVerificationError("source manifest source_inventory is invalid")
+    if not isinstance(run_inventory, list):
+        raise ManifestVerificationError("run manifest source_inventory is invalid")
+
+    live_inventory = inventory_supplied_inputs()
+    if source_inventory != live_inventory:
+        raise ManifestVerificationError(
+            "source manifest source_inventory disagrees with live supplied inventory"
+        )
+    if run_inventory != live_inventory:
+        raise ManifestVerificationError(
+            "run manifest source_inventory disagrees with live supplied inventory"
+        )
+
+
+def _verify_row_counts(
+    manifest: dict[str, Any], source_manifest: dict[str, Any], output_root: Path
+) -> None:
     if manifest.get("row_counts") != source_manifest.get("row_counts"):
         raise ManifestVerificationError(
             "row_counts.parquet or related source-manifest count mismatch"
@@ -228,7 +249,9 @@ def verify_run_manifest(output_root: Path) -> None:
     if not manifest_path.is_file():
         raise ManifestVerificationError(f"run manifest is missing: {MANIFEST_PATH.as_posix()}")
     manifest = _read_json(manifest_path)
-    _verify_row_counts(manifest, resolved_root)
+    source_manifest = _read_json(resolved_root / "evidence/phase1/source_manifest.json")
+    _verify_source_inventory(manifest, source_manifest)
+    _verify_row_counts(manifest, source_manifest, resolved_root)
     for artifact in manifest.get("artifacts", []):
         if not isinstance(artifact, dict):
             raise ManifestVerificationError("artifact entry is invalid")
