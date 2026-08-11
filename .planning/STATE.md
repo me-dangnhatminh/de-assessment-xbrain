@@ -73,9 +73,9 @@ Recent decisions affecting current work:
 - [Phase 3]: Keep AWS conceptual; use the live Bedrock trial only for five fixed cases with a credential-safe preflight and saved raw evidence.
 - [Phase 01]: Use output-root-relative artifact paths so tracer evidence bytes are stable across fresh output roots.
 - [Phase 01]: Keep event_date_utc as a typed Parquet DATE for analytical correctness.
-- [Phase ?]: Enforce INFO, WARN, and ERROR while allowing any non-empty service because no authoritative service allowlist exists.
-- [Phase ?]: Use complete canonical-record digests for exact duplicate detection and cross-reference the first source line.
-- [Phase ?]: Keep REPAIR explicit but report zero canonical repairs unless a lossless, mechanically provable policy applies.
+- [Phase 01]: Enforce INFO, WARN, and ERROR while allowing any non-empty service because no authoritative service allowlist exists.
+- [Phase 01]: Use complete canonical-record digests for exact duplicate detection and cross-reference the first source line.
+- [Phase 01]: Keep REPAIR explicit but report zero canonical repairs unless a lossless, mechanically provable policy applies.
 
 ### Pending Todos
 
