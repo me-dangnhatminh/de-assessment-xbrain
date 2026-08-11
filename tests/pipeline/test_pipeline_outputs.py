@@ -10,14 +10,14 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from pipeline.normalize import normalize_error, normalize_timestamp
+from pipeline.__main__ import main
 from pipeline.integrity import (
     SourceIntegrityError,
     assert_source_unchanged,
     inventory_supplied_inputs,
     validate_output_root,
 )
-from pipeline.__main__ import main
+from pipeline.normalize import normalize_error, normalize_timestamp
 from pipeline.write_outputs import (
     CLEAN_RECORD_SCHEMA,
     write_csv_atomic,
@@ -202,11 +202,16 @@ def test_full_run_reconciles_all_lines_and_keeps_rejects_out_of_parquet(tmp_path
     actions = [entry["final_action"] for entry in ledger]
 
     assert len(ledger) == sum(1 for _ in source.open(encoding="utf-8"))
-    assert actions.count("ACCEPT") + actions.count("REPAIR") + actions.count("REJECT") == len(ledger)
+    assert actions.count("ACCEPT") + actions.count("REPAIR") + actions.count("REJECT") == len(
+        ledger
+    )
     with duckdb.connect() as connection:
-        parquet_rows = connection.execute("SELECT count(*) FROM read_parquet(?)", [str(parquet_path)]).fetchone()[0]
+        parquet_rows = connection.execute(
+            "SELECT count(*) FROM read_parquet(?)", [str(parquet_path)]
+        ).fetchone()[0]
         date_bounds = connection.execute(
-            "SELECT min(event_date_utc), max(event_date_utc) FROM read_parquet(?)", [str(parquet_path)]
+            "SELECT min(event_date_utc), max(event_date_utc) FROM read_parquet(?)",
+            [str(parquet_path)],
         ).fetchone()
     assert parquet_rows == actions.count("ACCEPT") + actions.count("REPAIR")
     assert date_bounds == (date(2026, 7, 27), date(2026, 8, 2))
@@ -239,3 +244,5 @@ def test_full_run_is_stable_across_fresh_roots_and_integrity_command_reports_tot
     captured = capsys.readouterr()
     assert "files=" in captured.out
     assert "sha256=" in captured.out
+    assert "final_actions" in captured.out
+    assert "unclassified_errors=" in captured.out

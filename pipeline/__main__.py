@@ -9,6 +9,7 @@ import os
 import re
 import sys
 import tempfile
+from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -16,8 +17,28 @@ from typing import Any
 import duckdb
 
 from pipeline.ingest import canonical_record_digest, iter_source_lines, parse_json_line
-from pipeline.models import LedgerEntry
+from pipeline.integrity import (
+    SourceIntegrityError,
+    assert_source_unchanged,
+    inventory_supplied_inputs,
+)
+from pipeline.integrity import (
+    sha256_file as integrity_sha256_file,
+)
+from pipeline.integrity import (
+    validate_output_root as validate_generated_output_root,
+)
+from pipeline.models import CleanRecord, Disposition, LedgerEntry, Normalization
+from pipeline.normalize import normalize_error, normalize_timestamp
 from pipeline.validation import choose_final_action, make_issue, validate_record
+from pipeline.write_outputs import (
+    write_json_atomic,
+    write_jsonl_atomic,
+    write_schema,
+)
+from pipeline.write_outputs import (
+    write_parquet_atomic as write_many_parquet_atomic,
+)
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = REPOSITORY_ROOT / "docs/onboard/datapack/data/app_logs_7days.jsonl"
@@ -55,13 +76,10 @@ def atomic_write_bytes(path: Path, content: bytes) -> None:
 
 def validate_output_root(output_root: Path) -> Path:
     """Reject generated output locations that would mutate supplied inputs."""
-    resolved_output = output_root.expanduser().resolve()
-    immutable_root = (REPOSITORY_ROOT / "docs/onboard").resolve()
     try:
-        resolved_output.relative_to(immutable_root)
-    except ValueError:
-        return resolved_output
-    raise TraceError(f"output root must be outside immutable supplied inputs: {immutable_root}")
+        return validate_generated_output_root(output_root)
+    except SourceIntegrityError as error:
+        raise TraceError(str(error)) from error
 
 
 def select_source_line(
@@ -317,6 +335,149 @@ def cmd_validate(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def _run_validation_stream(
+    input_path: Path, max_line_bytes: int
+) -> tuple[list[LedgerEntry], list[dict[str, Any]]]:
+    """Validate every physical line and normalize only analytical final actions."""
+    ledger_entries: list[LedgerEntry] = []
+    clean_records: list[dict[str, Any]] = []
+    first_source_line_by_digest: dict[str, int] = {}
+    for envelope in iter_source_lines(input_path, max_line_bytes):
+        record, issues = parse_json_line(envelope)
+        if record is not None:
+            issues = (*issues, *validate_record(record))
+            record_digest = canonical_record_digest(record)
+            retained_source_line = first_source_line_by_digest.setdefault(
+                record_digest, envelope.source_line
+            )
+            if retained_source_line != envelope.source_line:
+                issues = (
+                    *issues,
+                    make_issue("EXACT_DUPLICATE", None, record_digest, retained_source_line),
+                )
+        else:
+            record_digest = None
+            retained_source_line = None
+        final_action = choose_final_action(issues)
+        normalizations: tuple[Normalization, ...] = ()
+        if record is not None and final_action in {Disposition.ACCEPT, Disposition.REPAIR}:
+            timestamp = normalize_timestamp(record["timestamp"])
+            error = normalize_error(record["message"], record["level"])
+            normalizations = (timestamp.evidence,)
+            if record["level"] == "ERROR":
+                normalizations += (
+                    Normalization(
+                        field="error_type",
+                        original_value=record["message"],
+                        normalized_value=error.error_type,
+                        reason="explicit ERROR signature taxonomy; raw message is retained",
+                    ),
+                )
+            clean_records.append(
+                asdict(
+                    CleanRecord(
+                        source_line=envelope.source_line,
+                        source_sha256=envelope.source_sha256,
+                        timestamp_raw=record["timestamp"],
+                        timestamp_utc=timestamp.timestamp_utc.isoformat(),
+                        event_date_utc=timestamp.event_date_utc.isoformat(),
+                        timestamp_offset_raw=timestamp.timestamp_offset_raw,
+                        service=record["service"],
+                        level=record["level"],
+                        message_raw=record["message"],
+                        request_id=record["request_id"],
+                        trace_id=record.get("trace_id"),
+                        error_type=error.error_type,
+                        error_code=error.error_code,
+                        related_component=error.related_component,
+                        path=error.path,
+                        error_parameters_json=error.error_parameters_json,
+                    )
+                )
+            )
+        ledger_entries.append(
+            LedgerEntry(
+                source_path=envelope.source_path,
+                source_sha256=envelope.source_sha256,
+                source_line=envelope.source_line,
+                record_digest=record_digest,
+                raw_line=envelope.raw_line,
+                issues=issues,
+                normalizations=normalizations,
+                final_action=final_action,
+                retained_source_line=retained_source_line,
+            )
+        )
+    return ledger_entries, clean_records
+
+
+def cmd_integrity(arguments: argparse.Namespace) -> int:
+    """Report the complete supplied-file inventory without generating artifacts."""
+    inventory = inventory_supplied_inputs()
+    input_path = Path(arguments.input).expanduser().resolve()
+    print(f"files={len(inventory)} sha256={integrity_sha256_file(input_path)}")
+    return 0
+
+
+def cmd_run(arguments: argparse.Namespace) -> int:
+    """Publish reconciled ledger, schema, manifest, and typed Parquet from immutable input."""
+    input_path = Path(arguments.input).expanduser().resolve()
+    output_root = validate_output_root(Path(arguments.output_root))
+    inventory_before = inventory_supplied_inputs()
+    try:
+        ledger_entries, clean_records = _run_validation_stream(input_path, arguments.max_line_bytes)
+    except (FileNotFoundError, ValueError) as error:
+        raise TraceError(str(error)) from error
+
+    final_actions = {action: 0 for action in Disposition}
+    for entry in ledger_entries:
+        final_actions[entry.final_action] += 1
+    input_count = len(ledger_entries)
+    analytical_count = final_actions[Disposition.ACCEPT] + final_actions[Disposition.REPAIR]
+    if input_count != sum(final_actions.values()) or analytical_count != len(clean_records):
+        raise TraceError("row conservation failed before evidence publication")
+
+    ledger_path = output_root / "evidence/phase1/quality_ledger.jsonl"
+    schema_path = output_root / "evidence/phase1/schema.json"
+    manifest_path = output_root / "evidence/phase1/source_manifest.json"
+    parquet_path = output_root / "processed/logs_clean.parquet"
+    write_jsonl_atomic(ledger_path, (entry.as_dict() for entry in ledger_entries))
+    write_schema(schema_path)
+    write_many_parquet_atomic(parquet_path, clean_records)
+    inventory_after = inventory_supplied_inputs()
+    assert_source_unchanged(inventory_before, inventory_after)
+    manifest = {
+        "input": {
+            "path": input_path.relative_to(REPOSITORY_ROOT).as_posix(),
+            "sha256": integrity_sha256_file(input_path),
+        },
+        "source_inventory": inventory_before,
+        "row_counts": {
+            "input": input_count,
+            "accept": final_actions[Disposition.ACCEPT],
+            "repair": final_actions[Disposition.REPAIR],
+            "reject": final_actions[Disposition.REJECT],
+            "parquet": len(clean_records),
+        },
+        "conservation": {
+            "input_equals_actions": input_count == sum(final_actions.values()),
+            "analytical_equals_parquet": analytical_count == len(clean_records),
+        },
+    }
+    write_json_atomic(manifest_path, manifest)
+    unclassified_errors = sum(
+        record["error_type"] == "UNCLASSIFIED_ERROR" for record in clean_records
+    )
+    print(
+        "final_actions "
+        f"accept={final_actions[Disposition.ACCEPT]} "
+        f"repair={final_actions[Disposition.REPAIR]} "
+        f"reject={final_actions[Disposition.REJECT]} "
+        f"unclassified_errors={unclassified_errors}"
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the durable stage-oriented command-line interface."""
     parser = argparse.ArgumentParser(prog="python -m pipeline")
@@ -332,6 +493,16 @@ def build_parser() -> argparse.ArgumentParser:
     validate_parser.add_argument("--output-root", required=True, type=Path)
     validate_parser.add_argument("--max-line-bytes", default=MAX_LINE_BYTES, type=int)
     validate_parser.set_defaults(handler=cmd_validate)
+    integrity_parser = subcommands.add_parser(
+        "integrity", help="inventory immutable supplied files"
+    )
+    integrity_parser.add_argument("--input", default=DEFAULT_INPUT, type=Path)
+    integrity_parser.set_defaults(handler=cmd_integrity)
+    run_parser = subcommands.add_parser("run", help="publish reconciled Phase 1 base evidence")
+    run_parser.add_argument("--input", default=DEFAULT_INPUT, type=Path)
+    run_parser.add_argument("--output-root", required=True, type=Path)
+    run_parser.add_argument("--max-line-bytes", default=MAX_LINE_BYTES, type=int)
+    run_parser.set_defaults(handler=cmd_run)
     return parser
 
 
@@ -341,7 +512,7 @@ def main(arguments: list[str] | None = None) -> int:
     parsed_arguments = parser.parse_args(arguments)
     try:
         return parsed_arguments.handler(parsed_arguments)
-    except TraceError as error:
+    except (TraceError, SourceIntegrityError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
 

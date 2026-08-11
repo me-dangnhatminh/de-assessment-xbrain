@@ -121,18 +121,17 @@ def write_parquet_atomic(path: Path, records: Iterable[dict[str, Any]]) -> None:
     temporary_path = path.with_name(f".{path.name}.{next(tempfile._get_candidate_names())}.tmp")
     column_names = [column.name for column in CLEAN_RECORD_SCHEMA]
     definitions = ", ".join(f"{column.name} {column.duckdb_type}" for column in CLEAN_RECORD_SCHEMA)
-    placeholders = ", ".join("?" for _ in column_names)
-    values = [
-        tuple(_duckdb_value(record.get(column)) for column in column_names)
-        for record in ordered_records
+    column_values = [
+        [_duckdb_value(record.get(column)) for record in ordered_records] for column in column_names
     ]
     try:
         with duckdb.connect() as connection:
             connection.execute(f"CREATE TABLE clean_records ({definitions})")
-            if values:
-                connection.executemany(
-                    f"INSERT INTO clean_records ({', '.join(column_names)}) VALUES ({placeholders})",
-                    values,
+            if ordered_records:
+                projections = ", ".join(f"unnest(?) AS {column}" for column in column_names)
+                connection.execute(
+                    f"INSERT INTO clean_records ({', '.join(column_names)}) SELECT {projections}",
+                    column_values,
                 )
             escaped_path = str(temporary_path).replace("'", "''")
             connection.execute(
