@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -13,7 +14,13 @@ from typing import Any
 import duckdb
 
 from pipeline.analysis import ANALYSIS_SPECS
-from pipeline.integrity import inventory_supplied_inputs, sha256_file, validate_output_root
+from pipeline.integrity import (
+    CANONICAL_LOG_INPUT,
+    SUPPLIED_ROOT,
+    inventory_supplied_inputs,
+    sha256_file,
+    validate_output_root,
+)
 from pipeline.write_outputs import write_json_atomic
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -165,7 +172,9 @@ def build_run_manifest(output_root: Path) -> dict[str, Any]:
     return manifest
 
 
-def _verify_source_inventory(manifest: dict[str, Any], source_manifest: dict[str, Any]) -> None:
+def _verify_source_inventory(
+    manifest: dict[str, Any], source_manifest: dict[str, Any], live_inventory: list[dict[str, str]]
+) -> None:
     """Require live supplied bytes to agree with both persisted inventory layers."""
     source_inventory = source_manifest.get("source_inventory")
     run_inventory = manifest.get("source_inventory")
@@ -174,7 +183,6 @@ def _verify_source_inventory(manifest: dict[str, Any], source_manifest: dict[str
     if not isinstance(run_inventory, list):
         raise ManifestVerificationError("run manifest source_inventory is invalid")
 
-    live_inventory = inventory_supplied_inputs()
     if source_inventory != live_inventory:
         raise ManifestVerificationError(
             "source manifest source_inventory disagrees with live supplied inventory"
@@ -183,6 +191,64 @@ def _verify_source_inventory(manifest: dict[str, Any], source_manifest: dict[str
         raise ManifestVerificationError(
             "run manifest source_inventory disagrees with live supplied inventory"
         )
+
+
+def _verify_input_binding(
+    source_manifest: dict[str, Any], live_inventory: list[dict[str, str]]
+) -> None:
+    """Authenticate the persisted production-input descriptor against live supplied bytes."""
+    descriptor = source_manifest.get("input")
+    if not isinstance(descriptor, dict):
+        raise ManifestVerificationError("source manifest input descriptor is invalid")
+    descriptor_path = descriptor.get("path")
+    descriptor_sha256 = descriptor.get("sha256")
+    if not isinstance(descriptor_path, str) or not isinstance(descriptor_sha256, str):
+        raise ManifestVerificationError("source manifest input descriptor is invalid")
+    if not re.fullmatch(r"[0-9a-f]{64}", descriptor_sha256):
+        raise ManifestVerificationError("source manifest input hash mismatch")
+
+    descriptor_relative = Path(descriptor_path)
+    if descriptor_relative.is_absolute() or ".." in descriptor_relative.parts:
+        raise ManifestVerificationError("source manifest input membership mismatch")
+    canonical_input = CANONICAL_LOG_INPUT.resolve()
+    resolved_descriptor = (REPOSITORY_ROOT / descriptor_relative).resolve()
+    if resolved_descriptor != canonical_input:
+        raise ManifestVerificationError("source manifest input membership mismatch")
+
+    expected_repository_path = canonical_input.relative_to(REPOSITORY_ROOT).as_posix()
+    expected_inventory_path = canonical_input.relative_to(SUPPLIED_ROOT).as_posix()
+    if descriptor_relative.as_posix() != expected_repository_path:
+        raise ManifestVerificationError("source manifest input membership mismatch")
+
+    source_inventory = source_manifest.get("source_inventory")
+    if not isinstance(source_inventory, list):
+        raise ManifestVerificationError("source manifest input membership mismatch")
+    source_entry = next(
+        (
+            entry
+            for entry in source_inventory
+            if isinstance(entry, dict) and entry.get("path") == expected_inventory_path
+        ),
+        None,
+    )
+    live_entry = next(
+        (
+            entry
+            for entry in live_inventory
+            if isinstance(entry, dict) and entry.get("path") == expected_inventory_path
+        ),
+        None,
+    )
+    if source_entry is None or live_entry is None:
+        raise ManifestVerificationError("source manifest input membership mismatch")
+
+    live_sha256 = sha256_file(canonical_input)
+    if (
+        source_entry.get("sha256") != descriptor_sha256
+        or live_entry.get("sha256") != descriptor_sha256
+        or live_sha256 != descriptor_sha256
+    ):
+        raise ManifestVerificationError("source manifest input hash mismatch")
 
 
 def _verify_row_counts(
@@ -250,7 +316,9 @@ def verify_run_manifest(output_root: Path) -> None:
         raise ManifestVerificationError(f"run manifest is missing: {MANIFEST_PATH.as_posix()}")
     manifest = _read_json(manifest_path)
     source_manifest = _read_json(resolved_root / "evidence/phase1/source_manifest.json")
-    _verify_source_inventory(manifest, source_manifest)
+    live_inventory = inventory_supplied_inputs()
+    _verify_source_inventory(manifest, source_manifest, live_inventory)
+    _verify_input_binding(source_manifest, live_inventory)
     _verify_row_counts(manifest, source_manifest, resolved_root)
     for artifact in manifest.get("artifacts", []):
         if not isinstance(artifact, dict):

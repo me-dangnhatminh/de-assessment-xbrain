@@ -7,6 +7,7 @@ from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SUPPLIED_ROOT = REPOSITORY_ROOT / "docs/onboard"
+CANONICAL_LOG_INPUT = SUPPLIED_ROOT / "datapack/data/app_logs_7days.jsonl"
 
 
 class SourceIntegrityError(ValueError):
@@ -20,6 +21,18 @@ def sha256_file(path: Path) -> str:
         for block in iter(lambda: source.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def require_canonical_log_input(input_path: Path) -> Path:
+    """Resolve and authorize the only supplied JSONL allowed for production evidence."""
+    resolved_input = input_path.expanduser().resolve()
+    canonical_input = CANONICAL_LOG_INPUT.resolve()
+    if resolved_input != canonical_input:
+        raise SourceIntegrityError(
+            "production input must be the canonical supplied log: "
+            "docs/onboard/datapack/data/app_logs_7days.jsonl"
+        )
+    return canonical_input
 
 
 def inventory_supplied_inputs(supplied_root: Path = SUPPLIED_ROOT) -> list[dict[str, str]]:

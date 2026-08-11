@@ -19,9 +19,11 @@ import duckdb
 from pipeline.analysis import ANALYSIS_SPECS, AnalysisError, run_all_analyses, run_analysis
 from pipeline.ingest import canonical_record_digest, iter_source_lines, parse_json_line
 from pipeline.integrity import (
+    CANONICAL_LOG_INPUT,
     SourceIntegrityError,
     assert_source_unchanged,
     inventory_supplied_inputs,
+    require_canonical_log_input,
 )
 from pipeline.integrity import (
     sha256_file as integrity_sha256_file,
@@ -44,7 +46,7 @@ from pipeline.write_outputs import (
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_INPUT = REPOSITORY_ROOT / "docs/onboard/datapack/data/app_logs_7days.jsonl"
+DEFAULT_INPUT = CANONICAL_LOG_INPUT
 SQL_PATH = REPOSITORY_ROOT / "pipeline/sql/00_tracer_service_error_counts.sql"
 REQUIRED_FIELDS = ("timestamp", "service", "level", "message", "request_id")
 MAX_LINE_BYTES = 1_048_576
@@ -452,7 +454,7 @@ def clean_generated_outputs(output_root: Path) -> None:
 
 def cmd_run(arguments: argparse.Namespace) -> int:
     """Publish reconciled ledger, schema, manifest, and typed Parquet from immutable input."""
-    input_path = Path(arguments.input).expanduser().resolve()
+    input_path = require_canonical_log_input(Path(arguments.input))
     output_root = validate_output_root(Path(arguments.output_root))
     inventory_before = inventory_supplied_inputs()
     try:
@@ -544,6 +546,7 @@ def cmd_verify(arguments: argparse.Namespace) -> int:
 
 def cmd_all(arguments: argparse.Namespace) -> int:
     """Run D-14 stages in order with immutable-source checks before and after."""
+    require_canonical_log_input(Path(arguments.input))
     output_root = validate_output_root(Path(arguments.output_root))
     source_before = inventory_supplied_inputs()
     if arguments.clean:
