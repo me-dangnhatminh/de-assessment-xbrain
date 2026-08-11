@@ -108,16 +108,69 @@ No v2 capabilities are planned for this fixed-scope assessment. Any expansion re
 
 ## Traceability
 
-Roadmap phase mappings will be populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| RPRO-01 | Phase 1 | Pending |
+| RPRO-02 | Phase 1 | Pending |
+| RPRO-03 | Phase 4 | Pending |
+| RPRO-04 | Phase 4 | Pending |
+| RPRO-05 | Phase 3 | Pending |
+| PIPE-01 | Phase 1 | Pending |
+| PIPE-02 | Phase 1 | Pending |
+| PIPE-03 | Phase 1 | Pending |
+| PIPE-04 | Phase 1 | Pending |
+| PIPE-05 | Phase 1 | Pending |
+| PIPE-06 | Phase 1 | Pending |
+| PIPE-07 | Phase 1 | Pending |
+| PIPE-08 | Phase 1 | Pending |
+| PIPE-09 | Phase 1 | Pending |
+| PIPE-10 | Phase 1 | Pending |
+| PIPE-11 | Phase 1 | Pending |
+| AWS-01 | Phase 3 | Pending |
+| AWS-02 | Phase 3 | Pending |
+| AWS-03 | Phase 3 | Pending |
+| KB-01 | Phase 2 | Pending |
+| KB-02 | Phase 2 | Pending |
+| KB-03 | Phase 2 | Pending |
+| KB-04 | Phase 2 | Pending |
+| KB-05 | Phase 2 | Pending |
+| KB-06 | Phase 2 | Pending |
+| KB-07 | Phase 2 | Pending |
+| KB-08 | Phase 2 | Pending |
+| KB-09 | Phase 2 | Pending |
+| KB-10 | Phase 2 | Pending |
+| KB-11 | Phase 2 | Pending |
+| KB-12 | Phase 2 | Pending |
+| SOP-01 | Phase 2 | Pending |
+| SOP-02 | Phase 2 | Pending |
+| AILOG-01 | Phase 4 | Pending |
+| AILOG-02 | Phase 4 | Pending |
+| AILOG-03 | Phase 4 | Pending |
+| AIREV-01 | Phase 3 | Pending |
+| AIREV-02 | Phase 3 | Pending |
+| AIREV-03 | Phase 3 | Pending |
+| AIEXT-01 | Phase 3 | Pending |
+| AIEXT-02 | Phase 3 | Pending |
+| AIEXT-03 | Phase 3 | Pending |
+| AIEXT-04 | Phase 3 | Pending |
+| AIEXT-05 | Phase 3 | Pending |
+| AIEXT-06 | Phase 3 | Pending |
+| AIEXT-07 | Phase 3 | Pending |
+| AIEXT-08 | Phase 3 | Pending |
+| AIEXT-09 | Phase 3 | Pending |
+| AIEXT-10 | Phase 3 | Pending |
+| DOC-01 | Phase 4 | Pending |
+| DOC-02 | Phase 4 | Pending |
+| DOC-03 | Phase 4 | Pending |
+| DOC-04 | Phase 4 | Pending |
+| DOC-05 | Phase 4 | Pending |
+| DOC-06 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 55 total
-- Mapped to phases: 0
-- Unmapped: 55 ⚠️
+- Mapped to phases: 55
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-08-11*
-*Last updated: 2026-08-11 after initial definition*
+*Last updated: 2026-08-11 after roadmap creation*
