@@ -5,10 +5,10 @@ milestone_name: milestone
 current_phase: 03
 current_phase_name: AWS Design & Bedrock Extraction Evidence
 status: ready
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-08-12T10:00:00.000Z"
+stopped_at: Phase 02 shipped — pushed to main (53f3195)
+last_updated: "2026-08-12T11:00:00.000Z"
 last_activity: 2026-08-12
-last_activity_desc: Phase 02 complete — evaluation pipeline (9/10 pass, 1 partial), version-trap proven, SOP written
+last_activity_desc: Phase 02 shipped — 11 commits pushed directly to main; moving to Phase 03
 progress:
   total_phases: 4
   completed_phases: 2
