@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import csv
 from pathlib import Path
 
 import duckdb
@@ -100,3 +101,81 @@ def test_service_error_counts_binds_parquet_path_without_sql_interpolation() -> 
 
     assert "read_parquet(?)" in sql
     assert str(PARQUET) not in sql
+
+
+def test_daily_error_counts_uses_seven_utc_dates_and_cleaned_error_rows(tmp_path: Path) -> None:
+    """The daily table covers the locked UTC window, including zero-count dates if needed."""
+    result_path = run_analysis(
+        "daily-error-counts", parquet_path=PARQUET, output_root=tmp_path / "output"
+    )
+
+    rows = list(csv.DictReader(result_path.open(encoding="utf-8")))
+    assert [row["event_date_utc"] for row in rows] == [
+        "2026-07-27",
+        "2026-07-28",
+        "2026-07-29",
+        "2026-07-30",
+        "2026-07-31",
+        "2026-08-01",
+        "2026-08-02",
+    ]
+    assert [int(row["daily_error_count"]) for row in rows] == [19, 27, 29, 140, 17, 24, 31]
+    assert all(row["median_error_count"] == "27.0" for row in rows)
+
+
+def test_daily_error_counts_applies_only_the_strict_descriptive_median_rule(
+    tmp_path: Path,
+) -> None:
+    """A count equal to twice median is not unusual; only the 140-count day is flagged."""
+    result_path = run_analysis(
+        "daily-error-counts", parquet_path=PARQUET, output_root=tmp_path / "output"
+    )
+    rows = list(csv.DictReader(result_path.open(encoding="utf-8")))
+
+    assert [row["is_unusual_by_2x_median_rule"] for row in rows] == [
+        "False",
+        "False",
+        "False",
+        "True",
+        "False",
+        "False",
+        "False",
+    ]
+    flagged = next(row for row in rows if row["is_unusual_by_2x_median_rule"] == "True")
+    assert flagged["event_date_utc"] == "2026-07-30"
+    assert float(flagged["error_count_to_median_ratio"]) == 140 / 27
+
+
+def test_daily_error_counts_contributions_reconcile_without_a_causation_claim(
+    tmp_path: Path,
+) -> None:
+    """Flagged-day detail is a deterministic service contribution, not an explanation."""
+    result_path = run_analysis(
+        "daily-error-counts", parquet_path=PARQUET, output_root=tmp_path / "output"
+    )
+    rows = list(csv.DictReader(result_path.open(encoding="utf-8")))
+    flagged = next(row for row in rows if row["is_unusual_by_2x_median_rule"] == "True")
+    contributions = [part.split(":", maxsplit=1) for part in flagged["service_contributions"].split(";")]
+
+    assert contributions == sorted(contributions)
+    assert sum(int(count) for _, count in contributions) == int(flagged["daily_error_count"])
+    assert "cause" not in result_path.read_text(encoding="utf-8").lower()
+
+
+def test_daily_error_counts_groups_offset_boundary_records_by_event_date_utc(
+    tmp_path: Path,
+) -> None:
+    """Source-text 2026-08-03 records remain in the official UTC daily window."""
+    result_path = run_analysis(
+        "daily-error-counts", parquet_path=PARQUET, output_root=tmp_path / "output"
+    )
+    with duckdb.connect() as connection:
+        normalized_boundary_count = connection.execute(
+            "SELECT count(*) FROM read_parquet(?) "
+            "WHERE level = 'ERROR' AND timestamp_raw LIKE '2026-08-03%' "
+            "AND event_date_utc = DATE '2026-08-02'",
+            [str(PARQUET)],
+        ).fetchone()[0]
+
+    assert normalized_boundary_count > 0
+    assert "2026-08-03" not in result_path.read_text(encoding="utf-8")
