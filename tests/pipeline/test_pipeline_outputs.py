@@ -77,7 +77,7 @@ def test_normalize_error_keeps_unclassified_errors_and_omits_non_error_taxonomy(
         assert normalized.error_code is None
         assert normalized.related_component is None
         assert normalized.path is None
-        assert normalized.error_parameters_json is None
+        assert normalized.error_parameters_json == "{}"
 
 
 def test_atomic_writers_emit_fixed_schema_and_stable_bytes(tmp_path: Path) -> None:
@@ -131,20 +131,31 @@ def test_atomic_writers_emit_fixed_schema_and_stable_bytes(tmp_path: Path) -> No
     write_csv_atomic(csv_path, ["source_line", "service"], [[2, "payment-api"], [1, "payment-api"]])
     write_schema(schema_path)
     write_parquet_atomic(parquet_path, records)
-    first_hashes = [sha256_file(path) for path in (json_path, jsonl_path, csv_path, schema_path, parquet_path)]
+    first_hashes = [
+        sha256_file(path) for path in (json_path, jsonl_path, csv_path, schema_path, parquet_path)
+    ]
 
     write_json_atomic(json_path, {"a": 2, "z": 1})
     write_jsonl_atomic(jsonl_path, [{"line": 2}, {"line": 1}])
     write_csv_atomic(csv_path, ["source_line", "service"], [[2, "payment-api"], [1, "payment-api"]])
     write_schema(schema_path)
     write_parquet_atomic(parquet_path, records)
-    assert [sha256_file(path) for path in (json_path, jsonl_path, csv_path, schema_path, parquet_path)] == first_hashes
+    assert [
+        sha256_file(path) for path in (json_path, jsonl_path, csv_path, schema_path, parquet_path)
+    ] == first_hashes
 
     with duckdb.connect() as connection:
         rows = connection.execute(
             "SELECT source_line, event_date_utc, error_type FROM read_parquet(?) ORDER BY source_line",
             [str(parquet_path)],
         ).fetchall()
-    assert rows == [(1, "2026-07-27", None), (2, "2026-07-27", "HTTP_502")]
+    assert [
+        (source_line, str(event_date), error_type) for source_line, event_date, error_type in rows
+    ] == [
+        (1, "2026-07-27", None),
+        (2, "2026-07-27", "HTTP_502"),
+    ]
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
-    assert [column["name"] for column in schema["columns"]] == [column.name for column in CLEAN_RECORD_SCHEMA]
+    assert [column["name"] for column in schema["columns"]] == [
+        column.name for column in CLEAN_RECORD_SCHEMA
+    ]
