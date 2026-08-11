@@ -21,6 +21,7 @@ from pipeline.integrity import (
     sha256_file,
     validate_output_root,
 )
+from pipeline.models import Disposition
 from pipeline.write_outputs import write_json_atomic
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -42,6 +43,51 @@ def _line_count(path: Path) -> int:
 
 def _csv_row_count(path: Path) -> int:
     return max(_line_count(path) - 1, 0)
+
+
+def _parquet_row_count(path: Path) -> int:
+    """Count live analytical rows through DuckDB without trusting a persisted declaration."""
+    try:
+        with duckdb.connect() as connection:
+            result = connection.execute(
+                "SELECT COUNT(*) FROM read_parquet(?)", [str(path)]
+            ).fetchone()
+    except (duckdb.Error, OSError) as error:
+        raise ManifestVerificationError(f"cannot count Parquet artifact: {path}") from error
+    if result is None or not isinstance(result[0], int):
+        raise ManifestVerificationError(f"cannot count Parquet artifact: {path}")
+    return result[0]
+
+
+def _ledger_action_counts(path: Path) -> dict[str, int]:
+    """Derive final-action totals from strict, line-oriented ledger evidence."""
+    counts = {action.value: 0 for action in Disposition}
+    try:
+        with path.open(encoding="utf-8") as ledger:
+            for line_number, line in enumerate(ledger, start=1):
+                if not line.strip():
+                    raise ManifestVerificationError(
+                        f"quality ledger contains a blank line at {line_number}"
+                    )
+                try:
+                    entry = json.loads(line)
+                except json.JSONDecodeError as error:
+                    raise ManifestVerificationError(
+                        f"quality ledger contains malformed JSON at line {line_number}"
+                    ) from error
+                if not isinstance(entry, dict):
+                    raise ManifestVerificationError(
+                        f"quality ledger entry is not an object at line {line_number}"
+                    )
+                action = entry.get("final_action")
+                if action not in counts:
+                    raise ManifestVerificationError(
+                        f"quality ledger final_action is invalid at line {line_number}"
+                    )
+                counts[action] += 1
+    except OSError as error:
+        raise ManifestVerificationError(f"cannot read quality ledger: {path}") from error
+    return counts
 
 
 def _uv_version() -> str:
@@ -94,15 +140,17 @@ def _manifest_payload(output_root: Path) -> dict[str, Any]:
 
     source_manifest = _read_json(source_manifest_path)
     try:
-        row_counts = source_manifest["row_counts"]
+        source_row_counts = source_manifest["row_counts"]
         source_inventory = source_manifest["source_inventory"]
     except KeyError as error:
         raise ManifestVerificationError(f"source manifest lacks {error.args[0]}") from error
-    if not isinstance(row_counts, dict) or not isinstance(source_inventory, list):
+    if not isinstance(source_row_counts, dict) or not isinstance(source_inventory, list):
         raise ManifestVerificationError("source manifest has invalid row-count or inventory data")
+    parquet_row_count = _parquet_row_count(parquet_path)
+    row_counts = {**source_row_counts, "parquet": parquet_row_count}
 
     artifacts = [
-        _artifact(parquet_path, output_root, row_count=int(row_counts["parquet"])),
+        _artifact(parquet_path, output_root, row_count=parquet_row_count),
         _artifact(ledger_path, output_root, row_count=_line_count(ledger_path)),
         _artifact(schema_path, output_root),
         _artifact(source_manifest_path, output_root),
@@ -254,13 +302,44 @@ def _verify_input_binding(
 def _verify_row_counts(
     manifest: dict[str, Any], source_manifest: dict[str, Any], output_root: Path
 ) -> None:
-    if manifest.get("row_counts") != source_manifest.get("row_counts"):
-        raise ManifestVerificationError(
-            "row_counts.parquet or related source-manifest count mismatch"
-        )
     ledger_path = output_root / "evidence/phase1/quality_ledger.jsonl"
-    if manifest["row_counts"].get("input") != _line_count(ledger_path):
-        raise ManifestVerificationError("row_counts.input does not match quality ledger")
+    parquet_path = output_root / "processed/logs_clean.parquet"
+    action_counts = _ledger_action_counts(ledger_path)
+    ledger_rows = sum(action_counts.values())
+    parquet_rows = _parquet_row_count(parquet_path)
+    live_counts = {
+        "input": ledger_rows,
+        "accept": action_counts[Disposition.ACCEPT.value],
+        "repair": action_counts[Disposition.REPAIR.value],
+        "reject": action_counts[Disposition.REJECT.value],
+        "parquet": parquet_rows,
+    }
+
+    for layer_name, persisted_counts in (
+        ("source manifest", source_manifest.get("row_counts")),
+        ("run manifest", manifest.get("row_counts")),
+    ):
+        if not isinstance(persisted_counts, dict):
+            raise ManifestVerificationError(f"{layer_name} row_counts is invalid")
+        for count_name, live_count in live_counts.items():
+            if persisted_counts.get(count_name) != live_count:
+                raise ManifestVerificationError(
+                    f"{layer_name} row_counts.{count_name} does not match live evidence"
+                )
+
+    if ledger_rows != (
+        action_counts[Disposition.ACCEPT.value]
+        + action_counts[Disposition.REPAIR.value]
+        + action_counts[Disposition.REJECT.value]
+    ):
+        raise ManifestVerificationError("quality ledger action conservation failed")
+    if (
+        parquet_rows
+        != action_counts[Disposition.ACCEPT.value] + action_counts[Disposition.REPAIR.value]
+    ):
+        raise ManifestVerificationError(
+            "row_counts.parquet does not match ledger analytical actions"
+        )
 
 
 def _verify_artifact(descriptor: dict[str, Any], output_root: Path) -> None:
@@ -277,7 +356,13 @@ def _verify_artifact(descriptor: dict[str, Any], output_root: Path) -> None:
     if descriptor.get("sha256") != sha256_file(path):
         raise ManifestVerificationError(f"artifact hash mismatch: {relative_path}")
     if "row_count" in descriptor:
-        actual_rows = _line_count(path) if path.suffix == ".jsonl" else None
+        actual_rows = (
+            _line_count(path)
+            if path.suffix == ".jsonl"
+            else _parquet_row_count(path)
+            if path.suffix == ".parquet"
+            else None
+        )
         if actual_rows is not None and descriptor["row_count"] != actual_rows:
             raise ManifestVerificationError(f"artifact row count mismatch: {relative_path}")
 
