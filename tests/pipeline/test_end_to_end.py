@@ -98,7 +98,9 @@ def test_run_rejects_symlinked_evidence_dir_aimed_at_supplied_tree(tmp_path: Pat
     """A descendant evidence symlink to docs/onboard fails before any write occurs."""
     output_root = tmp_path / "generated"
     output_root.mkdir()
-    (output_root / "evidence").symlink_to(REPOSITORY_ROOT / "docs/onboard", target_is_directory=True)
+    (output_root / "evidence").symlink_to(
+        REPOSITORY_ROOT / "docs/onboard", target_is_directory=True
+    )
     before = inventory_supplied_inputs()
 
     result = main(["run", "--input", str(SOURCE), "--output-root", str(output_root)])
