@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: auditable-log-pipeline-analysis
 status: executing
-stopped_at: Completed 01-07-PLAN.md
-last_updated: "2026-08-11T11:36:28.563Z"
+stopped_at: Completed 01-08-PLAN.md
+last_updated: "2026-08-11T12:16:31.880Z"
 last_activity: 2026-08-11
 last_activity_desc: Initial four-phase MVP roadmap created with all 55 v1 requirements mapped.
 progress:
   total_phases: 1
   completed_phases: 1
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 ## Current Position
 
 Phase: 01 (auditable-log-pipeline-analysis) — EXECUTING
-Plan: 2 of 7
+Plan: 3 of 7
 Status: Ready to execute
 Last activity: 2026-08-11 — Phase 01 execution started
 
@@ -65,6 +65,7 @@ Progress: [██████████] 100%
 | Phase 01 P05 | 8 min | 2 tasks | 6 files |
 | Phase 01-auditable-log-pipeline-analysis P06 | 17 min | 2 tasks | 9 files |
 | Phase 01 P07 | 10 min | 2 tasks | 4 files |
+| Phase 01-auditable-log-pipeline-analysis P08 | 22 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,9 @@ Recent decisions affecting current work:
 - [Phase ?]: Restrict --clean to an allowlisted generated-output path set.
 - [Phase ?]: Treat both saved source inventories as untrusted claims and compare each to a fresh live inventory.
 - [Phase ?]: Correct only the Phase 1 Goal line to canonical MVP user-story grammar.
+- [Phase ?]: Allow production evidence only from the exact canonical supplied JSONL after path resolution.
+- [Phase ?]: Authenticate persisted input descriptors against the live canonical file and supplied inventory.
+- [Phase ?]: Measure Parquet and ledger totals live during verification rather than trusting manifest declarations.
 
 ### Pending Todos
 
@@ -111,6 +115,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-11T05:09:58.565Z
-Stopped at: Completed 01-07-PLAN.md
+Last session: 2026-08-11T12:16:31.858Z
+Stopped at: Completed 01-08-PLAN.md
 Resume file: None
