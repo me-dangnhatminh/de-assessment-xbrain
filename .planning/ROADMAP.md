@@ -81,7 +81,17 @@ Plans:
   4. A reviewer can inspect at least three recorded evaluations with ranked retrieval traces, source and chunk citations, separate retrieval and groundedness diagnoses, and an explicit “not found in the supplied documents” outcome when appropriate.
   5. A reviewer can use a one-page-or-shorter English SOP that assigns update cadence, operator, owner, and approver responsibilities while preserving revision history and regression checks.
 
-**Plans**: TBD
+**Plans**: 2/2 plans authored
+
+Plans:
+
+**Wave 1**
+
+- [x] 02-01-PLAN.md — Inventory, metadata, chunking, version resolution, FTS5 index build, and current-first search with POL-01 proof.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 02-02-PLAN.md — Author 10 evaluation cases (4-3-2-1 distribution), execute retrieval-only scoring, and write the KB update SOP.
 
 ### Phase 3: AWS Design & Bedrock Extraction Evidence
 
@@ -122,6 +132,6 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Auditable Log Pipeline & Analysis | 8/8 | Complete    | 2026-08-12 |
-| 2. Version-Aware Knowledge Base & Evaluation | 0/TBD | Not started | - |
+| 2. Version-Aware Knowledge Base & Evaluation | 1/2 | In Progress | - |
 | 3. AWS Design & Bedrock Extraction Evidence | 0/TBD | Not started | - |
 | 4. Reviewer-Ready Submission & Handoff | 0/TBD | Not started | - |
