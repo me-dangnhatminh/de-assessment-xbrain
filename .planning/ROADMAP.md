@@ -27,7 +27,13 @@ Deliver a reviewer-defensible assessment submission in four vertical slices: fir
   2. A reviewer can follow every input line through stable validation issue codes and documented accept, repair, or reject decisions in a provenance-preserving quality ledger.
   3. A reviewer can rerun the pipeline and obtain row-conserving, deterministic cleaned Parquet data with a documented schema and a concise format rationale.
   4. A reviewer can rerun checked-in analysis and inspect recorded evidence for the highest-error service, daily error pattern, common normalized errors, and reconciled repaired/rejected counts without relying on manual calculations.
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Approve the locked toolchain and prove one immutable source line through the complete local evidence path.
+- [ ] 01-02-PLAN.md — Account for every source line and produce the deterministic quality ledger and typed cleaned Parquet.
+- [ ] 01-03-PLAN.md — Reproduce all four customer questions from static SQL and committed result tables.
+- [ ] 01-04-PLAN.md — Generate the direct evidence report/manifest and canonical clean-checkout verification command.
 
 ### Phase 2: Version-Aware Knowledge Base & Evaluation
 **Goal**: A reviewer can search all supplied operational documents, receive current policy by default, inspect historical provenance, and assess the result quality.
