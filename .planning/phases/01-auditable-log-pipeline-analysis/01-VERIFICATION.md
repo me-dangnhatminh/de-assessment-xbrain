@@ -1,71 +1,103 @@
 ---
 phase: 01-auditable-log-pipeline-analysis
-verified: 2026-08-11T05:24:21Z
+verified: 2026-08-11T12:34:34Z
 status: gaps_found
-score: 20/25 must-haves verified
-behavior_unverified: 2
+score: 22/30 must-haves verified
+behavior_unverified: 1
 overrides_applied: 0
 re_verification:
   previous_status: gaps_found
-  previous_score: 21/25
+  previous_score: 20/25
   gaps_closed:
-    - "Standalone verification now recomputes the complete live docs/onboard inventory and rejects either persisted source_inventory when it disagrees."
-    - "The Phase 1 MVP goal now passes the canonical user-story validator."
+    - "Production run/all now reject a foreign repository-local JSONL before cleanup or publication."
+    - "Verification authenticates the canonical input descriptor and remeasures Parquet/ledger action counts."
   gaps_remaining: []
-  regressions: []
+  regressions:
+    - "Descendant output-root symlinks can escape the approved root and can reach supplied inputs."
+    - "A self-consistent forged ledger/Parquet/analysis set can be rebuilt and accepted without derivation from the canonical input."
 gaps:
-  - truth: "Recorded Phase 1 evidence is bound to the supplied immutable log input."
+  - truth: "From a clean checkout, a reviewer can run ingestion without any supplied source file being changed."
     status: failed
-    reason: "cmd_run accepts an arbitrary repository-relative --input and verify_run_manifest() only compares docs/onboard inventories; it never validates source_manifest.input.path/hash against a supplied input."
+    reason: "The output-root guard authorizes only the root; writers and cleanup follow descendant symlinks after that check."
+    artifacts:
+      - path: "pipeline/integrity.py"
+        issue: "validate_output_root() does not authorize final artifact paths or reject symlinked ancestors."
+      - path: "pipeline/__main__.py"
+        issue: "cmd_run() and clean_generated_outputs() write/unlink descendant paths directly."
+    missing:
+      - "Authorize every write and cleanup target against the resolved output root and reject symlinked ancestors before opening or unlinking."
+      - "Add regression coverage for evidence/ and processed/ symlinks aimed at docs/onboard."
+  - truth: "A reviewer can defend every recorded result as derived from immutable canonical source evidence."
+    status: failed
+    reason: "verify_run_manifest() checks counts and self-rebuilt hashes but never reconstructs/compares ledger or Parquet content with the canonical log."
+    artifacts:
+      - path: "pipeline/manifest.py"
+        issue: "_verify_row_counts() accepts a forged same-count ledger; build_run_manifest() then creates a matching self-referential run_id."
+    missing:
+      - "Reconstruct or independently validate canonical ledger and Parquet content during verification, then compare provenance, actions, normalized rows, analyses, and hashes."
+      - "Add an adversarial test that changes raw_line or a Parquet value without changing counts and requires verification failure."
+  - truth: "The tracer proves a real source line through the same production validation and normalization evidence path."
+    status: failed
+    reason: "trace uses parse_and_normalize(), a separate implementation with different issue, action, digest, taxonomy, and normalization schemas."
     artifacts:
       - path: "pipeline/__main__.py"
-        issue: "cmd_run() resolves and processes any --input without requiring it to be under SUPPLIED_ROOT."
-      - path: "pipeline/manifest.py"
-        issue: "_verify_source_inventory() authenticates docs/onboard but ignores the persisted input descriptor."
+        issue: "cmd_trace()/parse_and_normalize() do not reuse validate_record(), choose_final_action(), normalize_error(), or production LedgerEntry/CleanRecord serialization."
     missing:
-      - "Restrict production run/all input to the canonical supplied log, or require it to be inside SUPPLIED_ROOT."
-      - "During verification, validate input.path membership and recompute its live SHA-256 against both the source manifest and supplied inventory."
-      - "Add a regression that a foreign repository-local JSONL input cannot reach a passing verify result."
-  - truth: "Recorded row-conservation evidence proves the actual Parquet row count."
+      - "Reuse the production path or explicitly narrow trace's contract and test parity against the full pipeline row."
+  - truth: "Exact duplicates cross-reference the first retained source line."
     status: failed
-    reason: "The Parquet count is copied from source_manifest.json during manifest construction and never measured from logs_clean.parquet during verification."
+    reason: "The digest map records the first parsed row before its final action; a second invalid duplicate cites a rejected line as retained."
+    artifacts:
+      - path: "pipeline/__main__.py"
+        issue: "cmd_validate() and _run_validation_stream() call setdefault before choose_final_action()."
+    missing:
+      - "Only store accepted/repaired rows as retained, or rename the field/policy to first observed and update documentation."
+  - truth: "JSONL validation accurately distinguishes invalid UTF-8 and standard JSON input."
+    status: failed
+    reason: "Replacement decoding rejects valid U+FFFD data, while json.loads accepts NaN/Infinity and classifies them as acceptable unexpected fields."
+    artifacts:
+      - path: "pipeline/ingest.py"
+        issue: "errors='replace' plus U+FFFD detection is not a UTF-8 validity check, and parsing has no rejecting parse_constant hook."
+    missing:
+      - "Strictly decode UTF-8 with a byte-safe invalid-row representation, reject non-standard JSON constants, and serialize evidence with allow_nan=False."
+  - truth: "Valid timestamp offsets preserve their raw representation."
+    status: failed
+    reason: "normalize_timestamp() takes the last six characters; valid +0700 becomes 0+0700 and +07 becomes :00+07."
+    artifacts:
+      - path: "pipeline/normalize.py"
+        issue: "Offset extraction assumes only Z or ±HH:MM syntax."
+    missing:
+      - "Extract the offset from a grammar/match that preserves all accepted ISO 8601 forms, with compact and hour-only regressions."
+  - truth: "The committed evidence snapshot's verification establishes source-grounded integrity, not merely internal consistency."
+    status: failed
+    reason: "A modified ledger raw_line with unchanged action totals, followed by manifest rebuild, passes verify_run_manifest()."
     artifacts:
       - path: "pipeline/manifest.py"
-        issue: "_manifest_payload() uses row_counts['parquet']; _verify_row_counts() compares two persisted declarations only."
-      - path: "tests/pipeline/test_evidence.py"
-        issue: "No regression modifies source_manifest row_counts.parquet, rebuilds the run manifest, and requires failure."
+        issue: "The final expected manifest/run_id is rebuilt from the forged current output set."
     missing:
-      - "Query COUNT(*) from the generated Parquet at build and verify time, and require it to equal the declared Parquet count."
-      - "Derive or cross-check ACCEPT plus REPAIR and REJECT totals from the ledger during verification."
-      - "Add the adversarial rebuilt-count regression."
+      - "Bind evidence content to a deterministic reconstruction from CANONICAL_LOG_INPUT or equivalent independently authenticated canonical digests."
 behavior_unverified_items:
-  - truth: "A clean-checkout reviewer can synchronize exactly the dependency versions recorded in uv.lock and invoke the tracer through the documented module command."
-    test: "In a fresh clone with globally installed uv, run uv sync --locked, then uv run --locked python -m pipeline trace --output-root /tmp/trace."
-    expected: "Locked synchronization and the trace command complete without relying on a pre-existing .venv."
-    why_human: "uv is not on this verification host PATH; make deliberately used the existing .venv fallback."
-  - truth: "One canonical make phase1 command performs the locked workflow and every documented stage remains independently runnable."
-    test: "In a fresh clone with globally installed uv, run make phase1, then each documented stage command."
-    expected: "The locked uv path is used and all stages succeed independently."
-    why_human: "The canonical command was exercised only through the documented .venv fallback, not in a clean uv-backed environment."
+  - truth: "A clean-checkout reviewer can synchronize exactly uv.lock and invoke the documented module command."
+    test: "In a fresh clone with no .venv, run uv sync --locked and uv run --locked python -m pipeline trace --output-root /tmp/trace."
+    expected: "Dependency synchronization and the tracer complete solely through the locked environment."
+    why_human: "uv sync --locked --offline passed in this existing checkout, but a fresh-clone/no-.venv execution was not performed."
 ---
 
 # Phase 1: Auditable Log Pipeline & Analysis Verification Report
 
 **Phase Goal:** As a reviewer, I want to run the complete log pipeline and customer analysis, so that I can defend every result from immutable source evidence.
-**Verified:** 2026-08-11T05:24:21Z
+**Verified:** 2026-08-11T12:34:34Z
 **Status:** gaps_found
-**Re-verification:** Yes — after Plan 01-07 gap closure
+**Re-verification:** Yes — after Plan 01-08 gap closure
 
 ## User Flow Coverage
 
 | User-story step | Expected outcome | Codebase evidence | Status |
 | --- | --- | --- | --- |
-| Reviewer creates the locked environment | `uv sync --locked` works from a clean checkout | `uv.lock`, README commands, and Makefile are present; this host has no `uv` executable | ⚠️ HUMAN NEEDED |
-| Reviewer runs the complete pipeline and analysis | Ledger, Parquet, four SQL tables, report, and manifest are generated | `make verify-phase1` exited 0 through the documented `.venv` fallback | ✓ VERIFIED |
-| Reviewer traces log-quality decisions | Every physical line is ledgered with stable issues and a final action | `cmd_run()` streams `SourceEnvelope` records; full test gate passed; current ledger has 2,923 lines | ✓ VERIFIED |
-| Reviewer defends results as immutable-source and row-conserving | A passing verifier proves the evidence came from supplied bytes and real Parquet totals | Independent adversarial checks accepted a foreign input and a rebuilt forged Parquet count | ✗ FAILED — BLOCKER |
-
-The corrected roadmap Goal passes `gsd-tools ... user-story.validate --pick valid` (`true`). It retains the same Phase 1 requirements and all four success criteria; the MVP metadata blocker in the prior report is closed.
+| Create locked environment | `uv sync --locked` works without relying on a prior environment | `uv sync --locked --offline` succeeded; clean clone was not exercised | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED |
+| Run complete pipeline and analyses | Ledger, Parquet, four tables, report, and manifest are generated | A temporary `all --clean` run completed and current `pipeline verify` passed | ✓ VERIFIED |
+| Trace and inspect quality decisions | Each physical line has stable ledger provenance and dispositions | Current ledger has 2,923 rows; however duplicate-retention semantics are false for invalid duplicates | ✗ FAILED |
+| Defend immutable, source-grounded results | No run can damage source and verify proves derivation from supplied bytes | Descendant symlink escape and self-consistent forged-ledger acceptance reproduced | ✗ FAILED — BLOCKER |
 
 ## Goal Achievement
 
@@ -73,135 +105,140 @@ The corrected roadmap Goal passes `gsd-tools ... user-story.validate --pick vali
 
 | # | Truth | Status | Evidence |
 | --- | --- | --- | --- |
-| 1 | Clean checkout verifies every supplied-input hash and ingestion does not change a source file. | ✗ FAILED | Fresh three-way `docs/onboard` inventory comparison is implemented, but the processed `--input` is not bound to that inventory. A foreign JSONL completed `run → analyze → report → verify` with exit codes `[0, 0, 0, 0]`. |
-| 2 | Every line reaches stable validation/disposition in a provenance ledger. | ✓ VERIFIED | `cmd_run()` writes ordered `LedgerEntry` data; committed ledger has 2,923 lines and the full test gate passed. |
-| 3 | Reruns yield row-conserving deterministic Parquet with documented schema/rationale. | ✗ FAILED | Normal runs produce 2,839 Parquet rows and deterministic outputs, but the verifier accepts a rebuilt manifest after `row_counts.parquet` is falsified. Thus recorded row-conservation evidence is not independently proven. |
-| 4 | Four checked-in analyses and recorded evidence answer customer questions without manual arithmetic. | ✓ VERIFIED | Static SQL registry, four generated CSVs, and evidence-only report completed in the canonical gate. |
-| 5 | One real source line traces through hash, provenance, validation, normalization, Parquet, SQL, and manifest evidence. | ✓ VERIFIED | `cmd_trace` is substantive and the tracer tests run in the full suite. |
-| 6 | A clean-checkout reviewer can synchronize exact lock versions and invoke the tracer. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Lockfile, README, and CLI are present, but no clean `uv` execution was possible. |
-| 7 | Repeated trace executions are stable and preserve the source hash. | ✓ VERIFIED | Tracer stability/source-integrity tests passed in the complete test gate. |
-| 8 | Every physical line, including malformed JSON and duplicates, remains ordered validation evidence. | ✓ VERIFIED | `iter_source_lines`, duplicate provenance, and validation tests are wired through `cmd_run`. |
-| 9 | ACCEPT/REPAIR/REJECT precedence and independent issues remain visible. | ✓ VERIFIED | `choose_final_action()` implements REJECT > REPAIR > ACCEPT; focused tests cover conflicts. |
-| 10 | Required/type/timestamp/level/content/extra-field rules have stable policies. | ✓ VERIFIED | `ISSUE_POLICIES` and `validate_record()` are substantive and tested. |
-| 11 | Known levels are enforced while non-empty unknown services remain valid. | ✓ VERIFIED | `ALLOWED_LEVELS` is enforced without a service allowlist. |
-| 12 | Aware timestamps preserve raw values and derive UTC separately from repair. | ✓ VERIFIED | `normalize_timestamp()` retains the raw value and records a normalization. |
-| 13 | Only ERROR rows receive taxonomy; unmatched errors remain visible and INFO/WARN taxonomy is null. | ✓ VERIFIED | `normalize_error()` enforces this branch and returns `UNCLASSIFIED_ERROR` for unmatched ERROR rows. |
-| 14 | Only analytical actions reach fixed-schema Parquet while ledger conservation holds during execution. | ✓ VERIFIED | `cmd_run()` checks in-memory conservation before writing; a direct query finds 2,839 current Parquet rows. |
-| 15 | Canonical artifacts are byte-stable while sources remain unchanged during a run. | ✓ VERIFIED | Atomic deterministic writers and `git diff --exit-code -- docs/onboard` passed. |
-| 16 | Static SQL produces highest-error service and UTC daily results. | ✓ VERIFIED | `AnalysisSpec` executes parameter-bound `01` and `02` SQL over Parquet. |
-| 17 | Highest-service ordering is deterministic. | ✓ VERIFIED | SQL orders by `error_count DESC, service ASC`; current result leads with `payment-api` at 139. |
-| 18 | Daily heuristic uses the UTC window, strict >2× median rule, ratio, and non-causal contributions. | ✓ VERIFIED | SQL `02`, result CSV, report wording, and tests are consistent. |
-| 19 | Top-three semantic ERROR ranking retains service evidence and exposes unclassified errors. | ✓ VERIFIED | SQL `03`, its result CSV, and ranking tests are present and exercised. |
-| 20 | Quality SQL separates issue occurrences from actions and proves both conservation equations. | ✓ VERIFIED | SQL `04` reads the ledger and Parquet, including an explicit zero-REPAIR row. |
-| 21 | The no-ID analysis command regenerates all four deterministic SQL tables. | ✓ VERIFIED | `run_all_analyses()` orchestrates only registered static SQL; the canonical gate regenerated all four. |
-| 22 | `make phase1` performs the locked canonical workflow and stages remain independently runnable. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | The workflow passed through the `.venv` fallback; a fresh `uv`-backed run remains unobserved. |
-| 23 | The Markdown report presents four evidence-linked answers and qualified methodology. | ✓ VERIFIED | `render_report()` consumes generated CSV/manifest evidence and contains direct SQL/table/hash links. |
-| 24 | Snapshot verification detects all linked-artifact and consistency failures. | ✗ FAILED | It now rejects forged source inventories, but accepts a foreign input and self-consistent forged Parquet count. |
-| 25 | Report and manifest consume generated evidence rather than independently calculating answers. | ✓ VERIFIED | `report.py` reads CSV/JSON; it does not query Parquet or calculate customer aggregates. |
+| 1 | Clean checkout ingestion preserves all supplied files. | ✗ FAILED | Descendant output symlink is accepted; source guard is root-only. |
+| 2 | Every input line is ledgered with stable validation/disposition evidence. | ✓ VERIFIED | Current ledger: 2,923 JSONL records; source-order tests and canonical run pass. |
+| 3 | Canonical normal runs produce deterministic, row-conserving Parquet. | ✓ VERIFIED | Direct DuckDB count is 2,839; ledger derives 2,839 ACCEPT + 0 REPAIR + 84 REJECT. |
+| 4 | Four checked-in analyses answer the customer questions without manual arithmetic. | ✓ VERIFIED | Static SQL registry, four CSVs, and report-only CSV readers are wired. |
+| 5 | Trace follows the production evidence path. | ✗ FAILED | Separate tracer contracts disagree with production taxonomy/action/digest behavior. |
+| 6 | A clean checkout can synchronize uv.lock and invoke trace. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Existing-checkout `uv sync --locked --offline` passed; no no-.venv clone test. |
+| 7 | Trace output is stable and source hash is unchanged. | ✓ VERIFIED | `test_trace_is_stable_across_fresh_output_roots` and source-hash assertions exist and pass in suite evidence. |
+| 8 | Duplicates cite the first retained line. | ✗ FAILED | Two identical invalid rows yield line 2 `retained_source_line=1`, even though line 1 is REJECT. |
+| 9 | ACCEPT/REPAIR/REJECT precedence preserves independent issues. | ✓ VERIFIED | `choose_final_action()` implements reject > repair > accept; focused tests cover it. |
+| 10 | JSON/type/timestamp/level/content rules are sound and stable. | ✗ FAILED | Valid U+FFFD is rejected as invalid UTF-8; NaN is accepted as an unexpected field. |
+| 11 | Known levels are enforced without a service allowlist. | ✓ VERIFIED | `ALLOWED_LEVELS`; validation has no service allowlist. |
+| 12 | Accepted offset timestamps preserve raw offset text. | ✗ FAILED | `+0700 → 0+0700` and `+07 → :00+07`. |
+| 13 | ERROR-only taxonomy and unclassified errors are preserved. | ✓ VERIFIED | `normalize_error()` branches on ERROR and returns `UNCLASSIFIED_ERROR`. |
+| 14 | Only analytical actions reach the fixed-schema Parquet. | ✓ VERIFIED | `_run_validation_stream()` appends clean rows only for ACCEPT/REPAIR; live counts reconcile. |
+| 15 | Repeated canonical runs cannot change supplied bytes. | ✗ FAILED | Symlinked descendant writes can reach supplied files before post-write inventory detects it. |
+| 16 | Static SQL reads Parquet for highest-service/daily results. | ✓ VERIFIED | Registered parameter-bound DuckDB queries and CSV outputs are present and live. |
+| 17 | Highest-service ordering is deterministic. | ✓ VERIFIED | SQL orders `error_count DESC, service ASC`; current first answer is payment-api/139. |
+| 18 | Daily heuristic uses UTC, strict >2× median, ratio, and non-causal wording. | ✓ VERIFIED | SQL, CSV, report, and tests agree. |
+| 19 | Top normalized ERROR ranking retains contributions and unclassified rows. | ✓ VERIFIED | SQL 03, CSV, and ranking tests are substantive/wired. |
+| 20 | Quality SQL separates issue occurrences/actions and reconciles both equations. | ✓ VERIFIED | SQL 04 reads ledger/Parquet and includes zero REPAIR. |
+| 21 | One no-ID command regenerates all four analyses. | ✓ VERIFIED | `run_all_analyses()` iterates the fixed registry. |
+| 22 | Canonical Make workflow and stages are runnable. | ✓ VERIFIED | `uv sync --locked --offline` and a temporary `all --clean` run passed; Makefile dispatches the same commands. |
+| 23 | Report contains four qualified, evidence-linked answers. | ✓ VERIFIED | `render_report()` reads generated CSV/manifest evidence; report links all required artifacts. |
+| 24 | Snapshot verification proves evidence is source-grounded. | ✗ FAILED | Same-count forged ledger plus rebuilt manifest was accepted. |
+| 25 | Report/manifest consume generated evidence rather than calculate answers. | ✓ VERIFIED | Report parses CSV and manifest only; it does not query Parquet. |
+| 26 | Verification freshly checks supplied inventory. | ✓ VERIFIED | `_verify_source_inventory()` compares a live inventory to both persisted layers. |
+| 27 | Rebuilt manifest rejects forged source inventory. | ✓ VERIFIED | Dedicated adversarial test and live comparison are wired. |
+| 28 | MVP roadmap goal is a valid user story. | ✓ VERIFIED | `user-story.validate --pick valid` returned `true`. |
+| 29 | Plan 07 targeted integrity check preserves supplied source. | ✓ VERIFIED | Canonical `pipeline verify` and `git diff --exit-code -- docs/onboard` passed. |
+| 30 | Plan 08 binds canonical input and independently measures counts. | ✓ VERIFIED | `require_canonical_log_input`, `_verify_input_binding`, `_parquet_row_count`, and `_ledger_action_counts` are substantive and tested. |
 
-**Score:** 20/25 truths verified (2 present, behavior-unverified).
+**Score:** 22/30 truths verified (1 present, behavior-unverified).
 
 ### Required Artifacts
 
-| Artifact set | Expected | Status | Details |
-| --- | --- | --- | --- |
-| `pipeline/{ingest,validation,normalize,integrity,write_outputs,models}.py` | Provenance-first deterministic pipeline | ✓ VERIFIED | Substantive and wired through the CLI and complete test suite. |
-| Ledger, schema, and cleaned Parquet | Dynamic generated evidence | ✓ VERIFIED | Current artifacts contain 2,923 ledger records and 2,839 directly counted Parquet rows. |
-| `pipeline/sql/01`–`04` plus four CSVs | Executable analysis and recorded results | ✓ VERIFIED | Static, parameter-bound SQL is wired to DuckDB output. |
-| `pipeline/{manifest,report}.py`, run manifest, report | Evidence graph and review surface | ✗ HOLLOW INTEGRITY | The source-input descriptor and actual Parquet count are not independently authenticated. |
-| `pyproject.toml`, `uv.lock`, Makefile, README | Clean-reviewer workflow | ⚠️ PRESENT, CLEAN-UV UNVERIFIED | Correct artifacts/commands exist; this host lacks `uv`. |
+| Artifact set | Status | Details |
+| --- | --- | --- |
+| `pipeline/{ingest,validation,models,normalize}.py` | ⚠️ PARTIAL | Production flow is substantive/wired; duplicate, UTF-8/JSON, and offset edge cases fail. |
+| `pipeline/{integrity,write_outputs}.py` | ✗ BLOCKER | Root check does not protect descendant writes or cleanup. |
+| `pipeline/{analysis,sql/*.sql,report}.py` | ✓ VERIFIED | Static queries flow from live Parquet/ledger to deterministic CSVs and report. |
+| `pipeline/manifest.py` and run manifest | ✗ BLOCKER | Live input/count checks work, but provenance/content derivation is not authenticated. |
+| Ledger, Parquet, schema, four CSVs, report | ✓ PRESENT | Current artifacts are substantive and live-counted, but can be replaced with a self-consistent forged set. |
+| `pyproject.toml`, `uv.lock`, Makefile, README | ⚠️ PRESENT | Locked sync, lint, formatting, and module compile pass; fresh-clone behavior remains unobserved. |
 
-All 35 plan-declared artifact checks passed at existence/substance level. The plan tool reported 23 of 24 key-link patterns; its Phase 01-07 user-story-regex pattern missed the Markdown emphasis syntax, but the canonical validator independently returned `true`.
+All 35 plan-declared artifacts pass the GSD existence/substance checker. That result is insufficient for the two integrity blockers above; both are Level-3/4 trust-boundary failures.
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
-| --- | --- | --- | --- |
-| CLI | supplied JSONL | source envelopes, hashes, and before/after inventory | ⚠️ PARTIAL | Default uses the canonical log, but `cmd_run()` allows an untrusted repository-local input. |
-| Manifest verifier | live supplied tree | fresh inventory vs both saved inventories | ✓ WIRED | `_verify_source_inventory()` calls `inventory_supplied_inputs()` and its two adversarial source-inventory tests passed. |
-| Source manifest input descriptor | live supplied input | membership/hash validation | ✗ NOT WIRED | No verifier reads `source_manifest['input']`. |
-| Source manifest count | actual Parquet | direct count/reconciliation | ✗ NOT WIRED | The verifier compares self-declared metadata, not `COUNT(*) FROM read_parquet(...)`. |
-| Analysis registry | SQL, Parquet, and CSVs | bound paths and atomic CSV writes | ✓ WIRED | Four output tables regenerated successfully. |
-| Report | result tables and run manifest | CSV/JSON readers only | ✓ WIRED | No independent aggregate path exists in the report renderer. |
+| --- | --- | --- | --- | --- |
+| `cmd_run`/`cmd_all` | canonical JSONL | `require_canonical_log_input()` | ✓ WIRED | Foreign same-byte repository file is rejected before cleanup/publication. |
+| `verify_run_manifest` | live supplied inventory/input hash | inventory and descriptor checks | ✓ WIRED | Correctly verifies canonical membership/hash. |
+| output artifact paths | resolved output root | final path authorization | ✗ NOT WIRED | Descendant symlinks are followed by writers/cleanup. |
+| verifier | canonical ledger/Parquet reconstruction | content/provenance comparison | ✗ NOT WIRED | Only action totals/counts and self-rebuilt hashes are compared. |
+| manifest builder/verifier | Parquet | DuckDB `COUNT(*)` | ✓ WIRED | `_parquet_row_count()` is called in both paths. |
+| verifier | ledger | strict final-action counting | ✓ WIRED | `_ledger_action_counts()` parses each JSONL action. |
+| report | four tables/run manifest | CSV/JSON readers | ✓ WIRED | No report-side aggregate calculation. |
 
 ### Data-Flow Trace (Level 4)
 
-| Artifact | Data variable | Source | Produces real data | Status |
-| --- | --- | --- | --- | --- |
-| Cleaned Parquet | `clean_records` | source JSONL → validation → normalization | DuckDB-written rows | ✓ FLOWING |
-| Four result CSVs | query rows | static SQL over Parquet/ledger | DuckDB query results | ✓ FLOWING |
-| Reviewer report | table rows + manifest data | generated CSV/JSON | Direct evidence values | ✓ FLOWING |
-| Immutable-input assertion | processed-input descriptor | saved `input.path`/hash | Descriptor is never checked against live supplied inventory | ✗ DISCONNECTED |
-| Row-conservation assertion | `row_counts.parquet` | saved source manifest count | No Parquet measurement in build or verify | ✗ DISCONNECTED |
+| Artifact | Data variable | Source | Status |
+| --- | --- | --- | --- |
+| Cleaned Parquet | `clean_records` | Canonical JSONL → validation → normalization → DuckDB | ✓ FLOWING |
+| Four result CSVs | query rows | Checked-in SQL over Parquet/ledger | ✓ FLOWING |
+| Reviewer report | table/manifest data | Generated CSV and JSON readers | ✓ FLOWING |
+| Input identity | descriptor/hash/inventory | Live canonical supplied file | ✓ FLOWING |
+| Whole evidence provenance | ledger/Parquet values | No reconstruction/comparison to canonical source | ✗ DISCONNECTED |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
-| Full canonical fallback workflow, lint, tests, source diff | `make verify-phase1` | Exit 0; generated evidence, verified manifest, Ruff, pytest, and supplied-tree diff all passed | ✓ PASS |
-| Fresh live source-inventory defense | Two named source-inventory tests | `2 passed` | ✓ PASS |
-| Canonical MVP goal | `gsd-tools query user-story.validate ... --pick valid` | `true` | ✓ PASS |
-| Foreign-input defense | Temporary repository-local copy supplied to `run`, `analyze`, `report`, `verify` | All stage codes were `0`; saved path was outside `docs/onboard` | ✗ FAIL |
-| Parquet-count defense | Increment source-manifest count, rebuild run manifest, invoke verifier | `FORGED_PARQUET_COUNT_ACCEPTED` | ✗ FAIL |
+| Locked dependency sync | `uv sync --locked --offline` | Resolved/checked 9 packages | ✓ PASS |
+| Code quality | `uv run --locked ruff check pipeline tests/pipeline` and format check | Both passed | ✓ PASS |
+| Compilation | `uv run --locked python -m compileall -q pipeline` | Passed | ✓ PASS |
+| Canonical evidence verification | `python -m pipeline verify ... --output-root data` | `run manifest verified` | ✓ PASS |
+| Supplied tree unchanged now | `git diff --exit-code -- docs/onboard` | Passed | ✓ PASS |
+| Symlink containment | Temporary output with `evidence -> /tmp/.../outside`, then `pipeline run` | Exit 0; ledger/schema/manifest written outside root | ✗ FAIL |
+| Forged evidence defense | Modify ledger `raw_line` only, rebuild manifest, then verify | `FORGED_LEDGER_RESULT ACCEPTED` | ✗ FAIL |
+| UTF-8/strict JSON | Temporary valid U+FFFD and `NaN` inputs | U+FFFD ACCEPT; `NaN` ACCEPT/UNEXPECTED_FIELD | ✗ FAIL |
+| Offset preservation | `normalize_timestamp(+0700/+07)` | Returned malformed offset strings | ✗ FAIL |
 
 ### Probe Execution
 
-SKIPPED — no phase-declared or conventional `scripts/**/tests/probe-*.sh` probes exist.
+SKIPPED — no phase-declared or conventional probe scripts exist.
 
 ### Requirements Coverage
 
-| Requirement | Source plan(s) | Status | Evidence |
-| --- | --- | --- | --- |
-| RPRO-01 | 01, 06 | ? NEEDS HUMAN | Lockfile and commands exist, but clean `uv sync --locked` was not observed. |
-| RPRO-02 | 01, 03, 06, 07 | ✗ BLOCKED | Fresh supplied-tree inventory is now real, but successful evidence can still derive from a non-supplied input. |
-| PIPE-01 | 01, 02 | ✓ SATISFIED | Bounded physical-line iterator preserves source-line provenance. |
-| PIPE-02 | 02 | ✓ SATISFIED | Stable parse/validation codes are implemented and tested. |
-| PIPE-03 | 02 | ✓ SATISFIED | Explicit policy catalogue and action precedence are wired. |
-| PIPE-04 | 02, 03 | ✓ SATISFIED | Per-line JSONL ledger captures provenance, issues, actions, and normalizations. |
-| PIPE-05 | 01, 03, 06 | ✗ BLOCKED | Execution checks counts, but reviewer-facing snapshot verification does not prove the actual Parquet count. |
-| PIPE-06 | 01, 03, 06 | ✓ SATISFIED | Fixed schema/rationale and typed Parquet are emitted and directly queryable. |
-| PIPE-07 | 04, 06 | ✓ SATISFIED | Static highest-service SQL and result table exist. |
-| PIPE-08 | 04, 06 | ✓ SATISFIED | UTC daily SQL records ratio, strict heuristic, and contributions. |
-| PIPE-09 | 05, 06 | ✓ SATISFIED | Top-normalized-error SQL and deterministic ranking evidence exist. |
-| PIPE-10 | 05, 06 | ✓ SATISFIED | Reconciliation distinguishes issue occurrence and final-action counts. |
-| PIPE-11 | 01, 04, 05, 06 | ✓ SATISFIED | Report/manifest links answers to SQL, tables, dataset hash, and counts; input-authentication gap remains recorded under RPRO-02. |
+| Requirement | Status | Evidence |
+| --- | --- | --- |
+| RPRO-01 | ? NEEDS HUMAN | Locked sync works here; clean clone without `.venv` not exercised. |
+| RPRO-02 | ✗ BLOCKED | Canonical input/hash checks were added, but descendants can mutate supplied files and verifier does not prove derived evidence. |
+| PIPE-01 | ✓ SATISFIED | Bounded physical-line iterator retains provenance. |
+| PIPE-02 | ✗ BLOCKED | Non-standard JSON constants and UTF-8 handling do not meet a robust JSON-quality contract. |
+| PIPE-03 | ✗ BLOCKED | Duplicate policy claims “first retained” but records first observed rejected lines. |
+| PIPE-04 | ✓ SATISFIED | Per-record ledger has source line, issues, action, rationale, and normalizations. |
+| PIPE-05 | ✗ BLOCKED | Live count checks work, but source immutability and source-derived evidence are not fail-closed. |
+| PIPE-06 | ✓ SATISFIED | Typed live-queryable Parquet and schema rationale exist. |
+| PIPE-07 | ✓ SATISFIED | Static service-count SQL and result exist. |
+| PIPE-08 | ✓ SATISFIED | UTC daily analysis and qualified rule exist. |
+| PIPE-09 | ✓ SATISFIED | Top normalized error SQL and service contributions exist. |
+| PIPE-10 | ✓ SATISFIED | Reconciliation distinguishes issue/action units and totals. |
+| PIPE-11 | ✗ BLOCKED | A reviewer cannot reliably trace a reported result back to canonical-derived evidence after forged replacement/rebuild. |
 
-### Anti-Patterns and Review Findings
+### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 | --- | --- | --- | --- |
-| `pipeline/__main__.py` | 453–498 | Arbitrary `--input` accepted by production run | 🛑 BLOCKER | A passing evidence graph need not originate from supplied log bytes. |
-| `pipeline/manifest.py` | 97–101, 188–197, 245–265 | Parquet count is self-declared and only cross-compared | 🛑 BLOCKER | A self-consistent rebuilt manifest can assert a false row count. |
-| `pipeline/ingest.py` | 52–68 | U+FFFD is treated as invalid UTF-8 after replacement decoding | ⚠️ WARNING | A valid literal U+FFFD is falsely rejected; invalid bytes are not losslessly represented. |
-| `pipeline/normalize.py` | 47–55 | Last-six-character offset extraction | ⚠️ WARNING | Accepted `+0700` becomes `0+0700`; accepted `+07` becomes `:00+07`. |
+| `pipeline/integrity.py` | 56–66 | Root-only output authorization | 🛑 BLOCKER | Descendant symlink can target immutable supplied material. |
+| `pipeline/__main__.py` | 441–479 | Cleanup/writes use unchecked descendant paths | 🛑 BLOCKER | Enables the symlink escape. |
+| `pipeline/manifest.py` | 302–419 | Count-only/self-referential verification | 🛑 BLOCKER | Rebuilt forged evidence passes. |
+| `pipeline/__main__.py` | 125–295 | Trace implements a divergent pipeline | ⚠️ WARNING | Trace is not a production parity proof. |
+| `pipeline/__main__.py` | 309–338, 359–375 | Duplicate map populated before disposition | ⚠️ WARNING | False retained-line provenance. |
+| `pipeline/ingest.py` | 52–68, 83–90 | Replacement-based UTF-8 and permissive JSON constants | ⚠️ WARNING | Misclassifies valid input and accepts invalid JSON. |
+| `pipeline/normalize.py` | 51 | Last-six-character offset extraction | ⚠️ WARNING | Corrupts accepted raw offsets. |
+| `tests/pipeline/test_evidence.py` | 274–286 | Temporarily edits tracked SQL | ⚠️ WARNING | Unsafe under interruption/concurrent tooling. |
 
-The two critical and two warning findings in `01-REVIEW.md` are independently confirmed. The offset cases were executed directly. No unreferenced `TBD`, `FIXME`, or `XXX` markers were found in the Phase 1 implementation/evidence files; empty collections found are normal initialization or parser control flow, not output stubs.
+No unreferenced `TBD`, `FIXME`, or `XXX` markers were found in Phase 1 code/evidence files.
 
-### Human Verification After Gap Closure
+### Human Verification Required After Gap Closure
 
-1. **Clean locked environment**
+1. **Clean locked checkout**
 
-   **Test:** In a fresh clone with `uv` installed, run `uv sync --locked` and the documented tracer command.
+   **Test:** Clone fresh with no `.venv`, run `uv sync --locked`, then `uv run --locked python -m pipeline trace --output-root /tmp/trace`.
 
-   **Expected:** Both complete without any existing `.venv`.
+   **Expected:** Commands succeed without ambient packages or the repository fallback.
 
-   **Why human:** The current host has no `uv` executable.
-
-2. **Clean canonical workflow**
-
-   **Test:** In that same fresh clone, run `make phase1` and each independently documented stage.
-
-   **Expected:** The locked `uv` path is used and all commands succeed.
-
-   **Why human:** The observed run used the intentional fallback, not the clean-checkout path.
+   **Why human:** This verifier used an existing checkout; it cannot establish fresh-machine behavior.
 
 ### Gaps Summary
 
-Plan 01-07 closed the prior stale-inventory defect: standalone verification now re-hashes the live supplied tree, and the canonical MVP user story is valid. That improvement does not bind the data that the pipeline actually processes to that supplied tree. In addition, manifest verification lets reconstructed metadata authenticate a false Parquet row count. Both are observable integrity failures, not merely missing tests, and prevent this phase from claiming a defensible immutable-source, row-conserving evidence chain.
-
-No later roadmap phase specifically promises to repair RPRO-02 or PIPE-05, so neither blocker is deferred.
+Plan 08 closed the previous, narrower gaps: production input is now constrained to the canonical log, input membership/hash is checked live, Parquet is measured live, and final actions are derived from the ledger. Those fixes do not achieve the phase goal because two broader integrity boundaries remain open: the code can write through a descendant output symlink, and verification can approve a fully replaced evidence graph after its manifest is rebuilt. The ledger/parser/trace warnings additionally make some claimed provenance inaccurate. No later roadmap phase explicitly owns these Phase 1 pipeline integrity defects, so none are deferred.
 
 ---
 
-_Verified: 2026-08-11T05:24:21Z_
+_Verified: 2026-08-11T12:34:34Z_
 _Verifier: the agent (gsd-verifier)_
