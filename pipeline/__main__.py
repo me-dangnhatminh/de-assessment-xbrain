@@ -15,6 +15,10 @@ from typing import Any
 
 import duckdb
 
+from pipeline.ingest import canonical_record_digest, iter_source_lines, parse_json_line
+from pipeline.models import LedgerEntry
+from pipeline.validation import choose_final_action, validate_record
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = REPOSITORY_ROOT / "docs/onboard/datapack/data/app_logs_7days.jsonl"
 SQL_PATH = REPOSITORY_ROOT / "pipeline/sql/00_tracer_service_error_counts.sql"
@@ -259,6 +263,45 @@ def cmd_trace(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_validate(arguments: argparse.Namespace) -> int:
+    """Stream every input line into deterministic validation-ledger evidence."""
+    input_path = Path(arguments.input).expanduser().resolve()
+    output_root = validate_output_root(Path(arguments.output_root))
+    source_sha256_before = sha256_file(input_path)
+    ledger_entries: list[LedgerEntry] = []
+    try:
+        envelopes = iter_source_lines(input_path, arguments.max_line_bytes)
+        for envelope in envelopes:
+            record, issues = parse_json_line(envelope)
+            if record is not None:
+                issues = (*issues, *validate_record(record))
+                record_digest = canonical_record_digest(record)
+            else:
+                record_digest = None
+            ledger_entries.append(
+                LedgerEntry(
+                    source_path=envelope.source_path,
+                    source_sha256=envelope.source_sha256,
+                    source_line=envelope.source_line,
+                    record_digest=record_digest,
+                    raw_line=envelope.raw_line,
+                    issues=issues,
+                    normalizations=(),
+                    final_action=choose_final_action(issues),
+                    retained_source_line=envelope.source_line,
+                )
+            )
+    except (FileNotFoundError, ValueError) as error:
+        raise TraceError(str(error)) from error
+
+    source_sha256_after = sha256_file(input_path)
+    if source_sha256_after != source_sha256_before:
+        raise TraceError("input source changed during validation")
+    ledger_content = "".join(canonical_json(entry.as_dict()) + "\n" for entry in ledger_entries)
+    atomic_write_bytes(output_root / "quality_ledger.jsonl", ledger_content.encode("utf-8"))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the durable stage-oriented command-line interface."""
     parser = argparse.ArgumentParser(prog="python -m pipeline")
@@ -269,6 +312,11 @@ def build_parser() -> argparse.ArgumentParser:
     trace_parser.add_argument("--output-root", required=True, type=Path)
     trace_parser.add_argument("--max-line-bytes", default=MAX_LINE_BYTES, type=int)
     trace_parser.set_defaults(handler=cmd_trace)
+    validate_parser = subcommands.add_parser("validate", help="validate every immutable log line")
+    validate_parser.add_argument("--input", default=DEFAULT_INPUT, type=Path)
+    validate_parser.add_argument("--output-root", required=True, type=Path)
+    validate_parser.add_argument("--max-line-bytes", default=MAX_LINE_BYTES, type=int)
+    validate_parser.set_defaults(handler=cmd_validate)
     return parser
 
 

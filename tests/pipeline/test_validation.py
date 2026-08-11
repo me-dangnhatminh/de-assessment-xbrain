@@ -52,7 +52,10 @@ def test_lines_are_enveloped_before_parse_and_bounded_by_bytes(tmp_path: Path) -
 
     assert [envelope.source_line for envelope in envelopes] == [1, 2]
     assert all(envelope.source_path == str(source.resolve()) for envelope in envelopes)
-    assert all(envelope.source_sha256 == hashlib.sha256(source.read_bytes()).hexdigest() for envelope in envelopes)
+    assert all(
+        envelope.source_sha256 == hashlib.sha256(source.read_bytes()).hexdigest()
+        for envelope in envelopes
+    )
     _, oversized_issues = parse_json_line(envelopes[1])
     assert issue_codes(oversized_issues) == {"LINE_TOO_LARGE"}
 
@@ -70,6 +73,7 @@ def test_required_types_timestamps_levels_and_content_have_stable_issues() -> No
 
     assert issue_codes(issues) == {
         "REQUIRED_FIELD_EMPTY",
+        "REQUIRED_FIELD_MISSING",
         "REQUIRED_FIELD_TYPE",
         "TIMESTAMP_OFFSET_MISSING",
         "LEVEL_UNKNOWN",
@@ -89,10 +93,14 @@ def test_unknown_service_is_valid_trace_id_is_optional_and_extra_fields_are_visi
     assert issue_codes(issues) == {"UNEXPECTED_FIELD"}
     assert issues[0].field == "deployment"
     assert choose_final_action(issues) is Disposition.ACCEPT
-    assert canonical_record_digest(record) == canonical_record_digest(dict(reversed(record.items())))
+    assert canonical_record_digest(record) == canonical_record_digest(
+        dict(reversed(record.items()))
+    )
 
 
-def test_validate_streams_real_source_into_one_ordered_ledger_record_per_line(tmp_path: Path) -> None:
+def test_validate_streams_real_source_into_one_ordered_ledger_record_per_line(
+    tmp_path: Path,
+) -> None:
     source_before = hashlib.sha256(SOURCE.read_bytes()).hexdigest()
     output_root = tmp_path / "validation"
 
