@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import json
 from pathlib import Path
 
 import duckdb
@@ -78,7 +79,10 @@ def test_service_error_counts_registry_declares_all_final_contracts() -> None:
         "service_contributions_json",
         "unclassified_error_count",
     )
-    assert ANALYSIS_SPECS["quality-reconciliation"].parameter_names == ("ledger_path",)
+    assert ANALYSIS_SPECS["quality-reconciliation"].parameter_names == (
+        "ledger_path",
+        "parquet_path",
+    )
     assert ANALYSIS_SPECS["quality-reconciliation"].expected_columns == (
         "metric_type",
         "issue_code",
@@ -277,5 +281,115 @@ def test_top_normalized_errors_sql_binds_the_parquet_path() -> None:
     sql_path = REPOSITORY_ROOT / ANALYSIS_SPECS["top-normalized-errors"].sql_path
     sql = sql_path.read_text(encoding="utf-8")
 
+    assert "read_parquet(?)" in sql
+    assert str(PARQUET) not in sql
+
+
+def write_ledger(path: Path, records: list[dict[str, object]]) -> None:
+    """Create compact deterministic JSONL audit evidence for SQL-only tests."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "".join(
+            json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n" for record in records
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_quality_reconciliation_separates_actions_issues_and_conservation(
+    tmp_path: Path,
+) -> None:
+    """The quality table retains zero repairs and proves both row-conservation equations."""
+    output_root = tmp_path / "output"
+    ledger_path = output_root / "evidence/phase1/quality_ledger.jsonl"
+    write_ledger(
+        ledger_path,
+        [
+            {"source_line": 1, "final_action": "ACCEPT", "issues": []},
+            {
+                "source_line": 2,
+                "final_action": "REJECT",
+                "issues": [
+                    {"issue_code": "BAD_TIMESTAMP", "action": "REJECT"},
+                    {"issue_code": "MISSING_LEVEL", "action": "REJECT"},
+                ],
+            },
+            {
+                "source_line": 3,
+                "final_action": "REJECT",
+                "issues": [{"issue_code": "BAD_TIMESTAMP", "action": "REJECT"}],
+            },
+        ],
+    )
+    parquet_path = tmp_path / "clean.parquet"
+    with duckdb.connect() as connection:
+        connection.execute("CREATE TABLE clean_rows(source_line BIGINT)")
+        connection.execute("INSERT INTO clean_rows VALUES (1)")
+        connection.execute("COPY clean_rows TO ? (FORMAT PARQUET)", [str(parquet_path)])
+
+    result_path = run_analysis(
+        "quality-reconciliation", parquet_path=parquet_path, output_root=output_root
+    )
+    rows = list(csv.DictReader(result_path.open(encoding="utf-8")))
+
+    assert [(row["final_action"], row["record_count"]) for row in rows[:3]] == [
+        ("ACCEPT", "1"),
+        ("REPAIR", "0"),
+        ("REJECT", "2"),
+    ]
+    issue_rows = [row for row in rows if row["metric_type"] == "issue_occurrence"]
+    assert [
+        (row["issue_code"], row["record_count"], row["issue_occurrences"]) for row in issue_rows
+    ] == [
+        ("BAD_TIMESTAMP", "2", "2"),
+        ("MISSING_LEVEL", "1", "1"),
+    ]
+    conservation_rows = [row for row in rows if row["metric_type"] == "conservation"]
+    assert [
+        (row["record_count"], row["issue_occurrences"], row["is_reconciled"])
+        for row in conservation_rows
+    ] == [
+        ("3", "3", "True"),
+        ("1", "1", "True"),
+    ]
+
+
+def test_quality_reconciliation_committed_evidence_is_stable_and_complete() -> None:
+    """Canonical evidence keeps actions, issue occurrences, and two reconciliations distinct."""
+    table_path = REPOSITORY_ROOT / "data/evidence/phase1/tables/04_quality_reconciliation.csv"
+    rows = list(csv.DictReader(table_path.open(encoding="utf-8")))
+
+    assert rows[0] == {
+        "metric_type": "record_total",
+        "issue_code": "",
+        "final_action": "ACCEPT",
+        "record_count": "2839",
+        "issue_occurrences": "",
+        "is_reconciled": "",
+    }
+    assert any(
+        row["metric_type"] == "record_total"
+        and row["final_action"] == "REPAIR"
+        and row["record_count"] == "0"
+        for row in rows
+    )
+    assert any(
+        row["metric_type"] == "issue_occurrence"
+        and row["issue_code"] == "EXACT_DUPLICATE"
+        and row["issue_occurrences"] == "28"
+        for row in rows
+    )
+    assert [row["is_reconciled"] for row in rows if row["metric_type"] == "conservation"] == [
+        "True",
+        "True",
+    ]
+
+
+def test_quality_reconciliation_sql_binds_ledger_and_parquet_paths() -> None:
+    """The quality query receives both audit and analytical evidence as bound values."""
+    sql_path = REPOSITORY_ROOT / ANALYSIS_SPECS["quality-reconciliation"].sql_path
+    sql = sql_path.read_text(encoding="utf-8")
+
+    assert "read_json(?)" in sql
     assert "read_parquet(?)" in sql
     assert str(PARQUET) not in sql
