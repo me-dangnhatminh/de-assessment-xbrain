@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import hashlib
 import csv
+import hashlib
 from pathlib import Path
 
 import duckdb
@@ -155,7 +155,9 @@ def test_daily_error_counts_contributions_reconcile_without_a_causation_claim(
     )
     rows = list(csv.DictReader(result_path.open(encoding="utf-8")))
     flagged = next(row for row in rows if row["is_unusual_by_2x_median_rule"] == "True")
-    contributions = [part.split(":", maxsplit=1) for part in flagged["service_contributions"].split(";")]
+    contributions = [
+        part.split(":", maxsplit=1) for part in flagged["service_contributions"].split(";")
+    ]
 
     assert contributions == sorted(contributions)
     assert sum(int(count) for _, count in contributions) == int(flagged["daily_error_count"])

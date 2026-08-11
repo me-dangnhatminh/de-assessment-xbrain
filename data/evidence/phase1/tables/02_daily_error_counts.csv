@@ -1,0 +1,8 @@
+event_date_utc,daily_error_count,median_error_count,error_count_to_median_ratio,is_unusual_by_2x_median_rule,service_contributions
+2026-07-27,19,27.0,0.7037037037037037,False,
+2026-07-28,27,27.0,1.0,False,
+2026-07-29,29,27.0,1.0740740740740742,False,
+2026-07-30,140,27.0,5.185185185185185,True,auth-service:6;batch-report:7;notification-worker:7;payment-api:112;web-portal:8
+2026-07-31,17,27.0,0.6296296296296297,False,
+2026-08-01,24,27.0,0.8888888888888888,False,
+2026-08-02,31,27.0,1.1481481481481481,False,
