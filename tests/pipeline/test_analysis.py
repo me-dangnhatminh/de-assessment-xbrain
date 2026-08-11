@@ -70,9 +70,7 @@ def test_service_error_counts_registry_declares_all_final_contracts() -> None:
         "03_top_normalized_errors.sql",
         "04_quality_reconciliation.sql",
     ]
-    assert ANALYSIS_SPECS["top-normalized-errors"].parameter_names == (
-        "parquet_path",
-    )
+    assert ANALYSIS_SPECS["top-normalized-errors"].parameter_names == ("parquet_path",)
     assert ANALYSIS_SPECS["top-normalized-errors"].expected_columns == (
         "rank",
         "error_type",

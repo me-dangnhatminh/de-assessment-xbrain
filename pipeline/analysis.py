@@ -55,14 +55,27 @@ ANALYSIS_SPECS = {
         sql_path=Path("pipeline/sql/03_top_normalized_errors.sql"),
         result_path=Path("evidence/phase1/tables/03_top_normalized_errors.csv"),
         parameter_names=("parquet_path",),
-        expected_columns=("rank", "error_type", "service", "error_count"),
+        expected_columns=(
+            "rank",
+            "error_type",
+            "error_count",
+            "service_contributions_json",
+            "unclassified_error_count",
+        ),
     ),
     "quality-reconciliation": AnalysisSpec(
         analysis_id="quality-reconciliation",
         sql_path=Path("pipeline/sql/04_quality_reconciliation.sql"),
         result_path=Path("evidence/phase1/tables/04_quality_reconciliation.csv"),
         parameter_names=("ledger_path",),
-        expected_columns=("final_action", "issue_code", "record_count"),
+        expected_columns=(
+            "metric_type",
+            "issue_code",
+            "final_action",
+            "record_count",
+            "issue_occurrences",
+            "is_reconciled",
+        ),
     ),
 }
 
@@ -87,21 +100,30 @@ def run_analysis(analysis_id: str, *, parquet_path: Path, output_root: Path) -> 
     """Execute one registered static query with values bound outside its SQL text."""
     spec = _get_spec(analysis_id)
     sql_path = _implementation_path(spec)
-    if spec.parameter_names != ("parquet_path",):
-        raise AnalysisError(
-            f"analysis {analysis_id} needs unsupported parameters: {spec.parameter_names}"
-        )
-    resolved_parquet = parquet_path.expanduser().resolve()
-    if not resolved_parquet.is_file():
-        raise AnalysisError(f"cleaned Parquet does not exist: {resolved_parquet}")
     try:
         generated_root = validate_output_root(output_root)
     except SourceIntegrityError as error:
         raise AnalysisError(str(error)) from error
 
+    parameter_values: dict[str, Path] = {
+        "parquet_path": parquet_path.expanduser().resolve(),
+        "ledger_path": generated_root / "evidence/phase1/quality_ledger.jsonl",
+    }
+    for parameter_name in spec.parameter_names:
+        try:
+            parameter_path = parameter_values[parameter_name]
+        except KeyError as error:
+            raise AnalysisError(
+                f"analysis {analysis_id} needs unsupported parameter: {parameter_name}"
+            ) from error
+        if not parameter_path.is_file():
+            raise AnalysisError(f"analysis input does not exist: {parameter_path}")
+
     sql = sql_path.read_text(encoding="utf-8")
     with duckdb.connect() as connection:
-        result = connection.execute(sql, [str(resolved_parquet)])
+        result = connection.execute(
+            sql, [str(parameter_values[name]) for name in spec.parameter_names]
+        )
         actual_columns = tuple(column[0] for column in result.description)
         if actual_columns != spec.expected_columns:
             raise AnalysisError(

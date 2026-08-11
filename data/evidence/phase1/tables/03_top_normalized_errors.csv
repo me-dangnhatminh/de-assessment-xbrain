@@ -1,0 +1,4 @@
+rank,error_type,error_count,service_contributions_json,unclassified_error_count
+1,CONNECTION_TIMEOUT,114,"{""payment-api"":114}",35
+2,HTTP_502,41,"{""web-portal"":41}",35
+3,NULL_POINTER,37,"{""batch-report"":37}",35
