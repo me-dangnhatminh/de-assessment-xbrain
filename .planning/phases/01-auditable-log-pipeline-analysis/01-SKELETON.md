@@ -37,6 +37,7 @@
 
 ## Subsequent Slice Plan
 
+- Phase 1 expansion sequence: Plan 01 proves the tracer; Plan 02 completes validation/disposition; Plan 03 publishes ledger/Parquet evidence; Plans 04–05 produce the four static-SQL result tables; Plan 06 renders and verifies the report/manifest through the canonical command.
 - Phase 2: A reviewer can search all supplied operational documents with deterministic current-version preference and inspect evaluation evidence.
 - Phase 3: A reviewer can assess the bounded AWS proposal and five-case Bedrock evidence without secrets or unsupported claims.
 - Phase 4: A reviewer can navigate, verify, audit, and receive the complete submission.

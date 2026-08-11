@@ -324,17 +324,19 @@ This uses an explicit connection and parameterized execution; DuckDB documents t
 | A1 | A fixed writer configuration plus stable ordering produces byte-identical Parquet across repeated runs on the same locked platform. | Architecture Patterns / Pitfall 5 | Hash comparison could fail due to writer metadata; the plan must test this immediately. |
 | A2 | Requiring an explicit timestamp offset is the appropriate strict policy for future parseable records. | Code Examples | A future valid but offset-less source record would be rejected; document this as a schema rule. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the implementation explicitly enforce the observed five-service and three-level enumerations, or only require non-empty strings?**
    - What we know: the phase requires categorical validation, while the context leaves exact issue-code names and schema details discretionary. [VERIFIED: REQUIREMENTS.md:21] [VERIFIED: 01-CONTEXT.md:41-43]
    - What's unclear: no supplied schema contract states whether a new service or level is invalid rather than a valid future category.
    - Recommendation: enforce a known level allowlist for this fixed POC and reject unknown levels with a dedicated issue; do not reject a non-empty unknown service unless the brief supplies an allowlist. [ASSUMED]
+   - **Resolution:** Adopted in Plan 01-02 Tasks 1–2. The fixed `INFO|WARN|ERROR` level allowlist is enforced, while a non-empty unknown service remains valid because the supplied materials define no authoritative service allowlist.
 
 2. **What repair category will be reported?**
    - What we know: all observed rejected defects are unrepairable under the locked conservative rule, while timestamp representation conversion is normalization rather than repair. [VERIFIED: docs/onboard/datapack/data/app_logs_7days.jsonl (full scan)] [VERIFIED: 01-CONTEXT.md:17-21]
    - What's unclear: no observed defect has a mechanically provable repaired value.
    - Recommendation: implement the repair branch and report a zero count if the run has no repairable record; do not invent a repair merely to make the category non-zero. [ASSUMED]
+   - **Resolution:** Adopted in Plan 01-02 Task 2 and Plan 01-05 Task 2. The disposition model implements the REPAIR branch, and quality reconciliation preserves an explicit zero REPAIR row when the canonical run contains no mechanically provable repair.
 
 ## Environment Availability
 
