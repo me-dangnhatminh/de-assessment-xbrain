@@ -12,7 +12,7 @@ Deliver a reviewer-defensible assessment submission in four vertical slices: fir
 - Decimal phases (for example, 2.1): Urgent insertions between planned phases
 
 - [x] **Phase 1: Auditable Log Pipeline & Analysis** - Turn immutable JSONL logs into a traceable cleaned dataset and reproducible customer answers. (completed 2026-08-12)
-- [ ] **Phase 2: Version-Aware Knowledge Base & Evaluation** - Deliver searchable, attributable operational knowledge with deterministic version handling and evaluation evidence.
+- [x] **Phase 2: Version-Aware Knowledge Base & Evaluation** - Deliver searchable, attributable operational knowledge with deterministic version handling and evaluation evidence. (completed 2026-08-12)
 - [ ] **Phase 3: AWS Design & Bedrock Extraction Evidence** - Deliver the conceptual AWS design and the bounded, source-grounded AI-proficiency artifacts and live trial.
 - [ ] **Phase 4: Reviewer-Ready Submission & Handoff** - Assemble, audit, and document a clean, reproducible assessment submission.
 
@@ -91,7 +91,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 02-02-PLAN.md — Author 10 evaluation cases (4-3-2-1 distribution), execute retrieval-only scoring, and write the KB update SOP.
+- [x] 02-02-PLAN.md — Author 10 evaluation cases (4-3-2-1 distribution), execute retrieval-only scoring, and write the KB update SOP.
 
 ### Phase 3: AWS Design & Bedrock Extraction Evidence
 
@@ -132,6 +132,6 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Auditable Log Pipeline & Analysis | 8/8 | Complete    | 2026-08-12 |
-| 2. Version-Aware Knowledge Base & Evaluation | 1/2 | In Progress | - |
+| 2. Version-Aware Knowledge Base & Evaluation | 2/2 | Complete    | 2026-08-12 |
 | 3. AWS Design & Bedrock Extraction Evidence | 0/TBD | Not started | - |
 | 4. Reviewer-Ready Submission & Handoff | 0/TBD | Not started | - |

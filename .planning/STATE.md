@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 02
-current_phase_name: Version-Aware Knowledge Base & Evaluation
-status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-08-12T05:00:00.000Z"
+current_phase: 03
+current_phase_name: AWS Design & Bedrock Extraction Evidence
+status: ready
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-08-12T10:00:00.000Z"
 last_activity: 2026-08-12
-last_activity_desc: Phase 02 Plan 1 complete — kb/ pipeline built and verified
+last_activity_desc: Phase 02 complete — evaluation pipeline (9/10 pass, 1 partial), version-trap proven, SOP written
 progress:
-  total_phases: 2
-  completed_phases: 1
-  total_plans: 10
-  completed_plans: 9
+  total_phases: 4
+  completed_phases: 2
+  total_plans: 11
+  completed_plans: 10
 ---
 
 # Project State
@@ -27,10 +27,11 @@ See: .planning/PROJECT.md (updated 2026-08-11)
 
 ## Current Position
 
-Phase: 02 (Version-Aware Knowledge Base & Evaluation) — EXECUTING
-Plan: 2 of 2 (Plan 1 complete)
-Status: Executing Phase 02 — Plan 02-01 done, Plan 02-02 pending
-Last activity: 2026-08-12 — Plan 02-01 complete (kb/ pipeline: inventory, FTS5 index, search)
+Phase: 02 (Version-Aware Knowledge Base & Evaluation) — COMPLETE  
+Phase: 03 (AWS Design & Bedrock Extraction Evidence) — READY TO START
+Plan: 2/2 complete
+Status: Phase 02 done — moving to Phase 03
+Last activity: 2026-08-12 — Plan 02-02 complete (evaluation pipeline + SOP)
 
 Progress: [██████████] 100%
 
