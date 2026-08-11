@@ -9,25 +9,25 @@ Requirements for the complete assessment submission. Each requirement will map t
 
 ### Reproducibility Foundation
 
-- [ ] **RPRO-01**: Reviewer can create the documented, locked Python environment and invoke the project verification commands from a clean checkout.
-- [ ] **RPRO-02**: Reviewer can verify that supplied briefs, readings, logs, and operational documents remain unchanged through recorded source hashes.
+- [x] **RPRO-01**: Reviewer can create the documented, locked Python environment and invoke the project verification commands from a clean checkout.
+- [x] **RPRO-02**: Reviewer can verify that supplied briefs, readings, logs, and operational documents remain unchanged through recorded source hashes.
 - [ ] **RPRO-03**: Reviewer can inspect an evidence manifest that records input hashes, relevant configuration, commands, output paths, row counts, and non-secret runtime metadata for generated results.
 - [ ] **RPRO-04**: Reviewer can run a clean-output smoke check that regenerates required deterministic artifacts and verifies their internal consistency.
 - [ ] **RPRO-05**: Reviewer can configure AWS and Bedrock access without any credential, account identifier, or real `.env` file being committed.
 
 ### Log Pipeline and Analysis
 
-- [ ] **PIPE-01**: Reviewer can run a Python command that reads every line of `docs/onboard/datapack/data/app_logs_7days.jsonl` while retaining source-line provenance.
-- [ ] **PIPE-02**: Reviewer can inspect validation code that detects and assigns stable issue codes to every discovered JSON, schema, type, timestamp, categorical, and content-quality problem.
-- [ ] **PIPE-03**: Reviewer can inspect an explicit rule and rationale for whether each issue type is accepted, narrowly repaired, or rejected without editing the source file.
-- [ ] **PIPE-04**: Reviewer can inspect a per-record quality ledger containing source line, issue code, action, reason, and original versus normalized values where a repair occurs.
-- [ ] **PIPE-05**: Reviewer can verify row conservation and deterministic reruns: every input record is accounted for and repeated runs with the same inputs produce the same cleaned data and quality totals.
-- [ ] **PIPE-06**: Reviewer can query a structured Parquet dataset with a documented schema and a concise rationale for choosing the format.
-- [ ] **PIPE-07**: Reviewer can reproduce which service has the most `ERROR` records across the seven-day period from checked-in SQL or pandas code and recorded results.
-- [ ] **PIPE-08**: Reviewer can reproduce system-wide daily error counts and inspect the stated, evidence-based rule used to identify any unusual day without overstating statistical certainty.
-- [ ] **PIPE-09**: Reviewer can reproduce the three most frequent normalized error types or codes and the associated service or services.
-- [ ] **PIPE-10**: Reviewer can reproduce rejected and repaired record counts grouped by issue type, with totals reconciling to the quality ledger.
-- [ ] **PIPE-11**: Reviewer can trace every reported pipeline answer to the cleaned dataset, executable analysis source, generated result table, and run manifest rather than to manual calculations.
+- [x] **PIPE-01**: Reviewer can run a Python command that reads every line of `docs/onboard/datapack/data/app_logs_7days.jsonl` while retaining source-line provenance.
+- [x] **PIPE-02**: Reviewer can inspect validation code that detects and assigns stable issue codes to every discovered JSON, schema, type, timestamp, categorical, and content-quality problem.
+- [x] **PIPE-03**: Reviewer can inspect an explicit rule and rationale for whether each issue type is accepted, narrowly repaired, or rejected without editing the source file.
+- [x] **PIPE-04**: Reviewer can inspect a per-record quality ledger containing source line, issue code, action, reason, and original versus normalized values where a repair occurs.
+- [x] **PIPE-05**: Reviewer can verify row conservation and deterministic reruns: every input record is accounted for and repeated runs with the same inputs produce the same cleaned data and quality totals.
+- [x] **PIPE-06**: Reviewer can query a structured Parquet dataset with a documented schema and a concise rationale for choosing the format.
+- [x] **PIPE-07**: Reviewer can reproduce which service has the most `ERROR` records across the seven-day period from checked-in SQL or pandas code and recorded results.
+- [x] **PIPE-08**: Reviewer can reproduce system-wide daily error counts and inspect the stated, evidence-based rule used to identify any unusual day without overstating statistical certainty.
+- [x] **PIPE-09**: Reviewer can reproduce the three most frequent normalized error types or codes and the associated service or services.
+- [x] **PIPE-10**: Reviewer can reproduce rejected and repaired record counts grouped by issue type, with totals reconciling to the quality ledger.
+- [x] **PIPE-11**: Reviewer can trace every reported pipeline answer to the cleaned dataset, executable analysis source, generated result table, and run manifest rather than to manual calculations.
 
 ### AWS Daily-Pipeline Design
 
@@ -110,22 +110,22 @@ No v2 capabilities are planned for this fixed-scope assessment. Any expansion re
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| RPRO-01 | Phase 1 | Gaps Found |
-| RPRO-02 | Phase 1 | Gaps Found |
+| RPRO-01 | Phase 1 | Complete |
+| RPRO-02 | Phase 1 | Complete |
 | RPRO-03 | Phase 4 | Pending |
 | RPRO-04 | Phase 4 | Pending |
 | RPRO-05 | Phase 3 | Pending |
-| PIPE-01 | Phase 1 | Gaps Found |
-| PIPE-02 | Phase 1 | Gaps Found |
-| PIPE-03 | Phase 1 | Gaps Found |
-| PIPE-04 | Phase 1 | Gaps Found |
-| PIPE-05 | Phase 1 | Gaps Found |
-| PIPE-06 | Phase 1 | Gaps Found |
-| PIPE-07 | Phase 1 | Gaps Found |
-| PIPE-08 | Phase 1 | Gaps Found |
-| PIPE-09 | Phase 1 | Gaps Found |
-| PIPE-10 | Phase 1 | Gaps Found |
-| PIPE-11 | Phase 1 | Gaps Found |
+| PIPE-01 | Phase 1 | Complete |
+| PIPE-02 | Phase 1 | Complete |
+| PIPE-03 | Phase 1 | Complete |
+| PIPE-04 | Phase 1 | Complete |
+| PIPE-05 | Phase 1 | Complete |
+| PIPE-06 | Phase 1 | Complete |
+| PIPE-07 | Phase 1 | Complete |
+| PIPE-08 | Phase 1 | Complete |
+| PIPE-09 | Phase 1 | Complete |
+| PIPE-10 | Phase 1 | Complete |
+| PIPE-11 | Phase 1 | Complete |
 | AWS-01 | Phase 3 | Pending |
 | AWS-02 | Phase 3 | Pending |
 | AWS-03 | Phase 3 | Pending |
