@@ -125,22 +125,22 @@ def test_service_error_counts_binds_parquet_path_without_sql_interpolation() -> 
     assert str(PARQUET) not in sql
 
 
-def test_analysis_registry_rejects_an_explicit_unimplemented_query(
+def test_analysis_registry_rejects_an_unknown_explicit_query(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """An explicit future ID fails instead of silently omitting evidence."""
+    """An explicit unknown ID fails instead of silently omitting evidence."""
     result = main(
         [
             "analyze",
             "--analysis-id",
-            "top-normalized-errors",
+            "unknown-analysis",
             "--output-root",
             str(tmp_path / "output"),
         ]
     )
 
     assert result == 2
-    assert "not implemented yet" in capsys.readouterr().err
+    assert "unknown analysis id" in capsys.readouterr().err
 
 
 def test_daily_error_counts_uses_seven_utc_dates_and_cleaned_error_rows(tmp_path: Path) -> None:

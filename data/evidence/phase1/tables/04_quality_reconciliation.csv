@@ -1,0 +1,10 @@
+metric_type,issue_code,final_action,record_count,issue_occurrences,is_reconciled
+record_total,,ACCEPT,2839,,
+record_total,,REPAIR,0,,
+record_total,,REJECT,84,,
+issue_occurrence,EXACT_DUPLICATE,REJECT,28,28,
+issue_occurrence,JSON_MALFORMED,REJECT,18,18,
+issue_occurrence,REQUIRED_FIELD_MISSING,REJECT,18,18,
+issue_occurrence,TIMESTAMP_INVALID,REJECT,20,20,
+conservation,,INPUT_EQUALS_ACTIONS,2923,2923,True
+conservation,,ANALYTICAL_EQUALS_PARQUET,2839,2839,True

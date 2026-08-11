@@ -67,7 +67,7 @@ ANALYSIS_SPECS = {
         analysis_id="quality-reconciliation",
         sql_path=Path("pipeline/sql/04_quality_reconciliation.sql"),
         result_path=Path("evidence/phase1/tables/04_quality_reconciliation.csv"),
-        parameter_names=("ledger_path",),
+        parameter_names=("ledger_path", "parquet_path"),
         expected_columns=(
             "metric_type",
             "issue_code",
