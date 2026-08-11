@@ -37,7 +37,13 @@ def test_manifest_is_deterministic_and_links_every_evidence_artifact(tmp_path: P
     assert {"all", "analyze", "integrity", "report", "run", "validate", "verify"} <= set(
         first["commands"]
     )
-    assert first["row_counts"] == {"accept": 2839, "input": 2923, "parquet": 2839, "reject": 84, "repair": 0}
+    assert first["row_counts"] == {
+        "accept": 2839,
+        "input": 2923,
+        "parquet": 2839,
+        "reject": 84,
+        "repair": 0,
+    }
     artifact_paths = {artifact["path"] for artifact in first["artifacts"]}
     assert {
         "processed/logs_clean.parquet",
@@ -83,7 +89,9 @@ def test_report_renders_only_generated_table_values_and_direct_evidence_links(
     )
 
     assert report_path == output_root / "evidence/phase1/report.md"
-    assert f"{service_rows[0]['service']} ({service_rows[0]['error_count']} ERROR records)" in report
+    assert (
+        f"{service_rows[0]['service']} ({service_rows[0]['error_count']} ERROR records)" in report
+    )
     assert "5.185185185185185" in report
     assert "descriptive seven-day heuristic" in report
     assert "does not establish causation" in report
@@ -109,7 +117,11 @@ def test_manifest_verification_detects_tampered_artifacts_and_queries(
     _build_evidence(output_root)
     build_run_manifest(output_root)
 
-    target = REPOSITORY_ROOT / relative_path if relative_path.startswith("pipeline/") else output_root / relative_path
+    target = (
+        REPOSITORY_ROOT / relative_path
+        if relative_path.startswith("pipeline/")
+        else output_root / relative_path
+    )
     original = target.read_text(encoding="utf-8")
     try:
         target.write_text(original + mutation, encoding="utf-8")
