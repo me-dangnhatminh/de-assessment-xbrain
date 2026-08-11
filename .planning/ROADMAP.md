@@ -20,7 +20,7 @@ Deliver a reviewer-defensible assessment submission in four vertical slices: fir
 
 ### Phase 1: Auditable Log Pipeline & Analysis
 
-**Goal**: A reviewer can run and defend the complete log-quality and customer-analysis workflow from immutable source lines to recorded results.
+**Goal**: As a reviewer, I want to run the complete log pipeline and customer analysis, so that I can defend every result from immutable source evidence.
 **Mode:** mvp
 **Depends on**: Nothing (first phase)
 **Requirements**: RPRO-01, RPRO-02, PIPE-01, PIPE-02, PIPE-03, PIPE-04, PIPE-05, PIPE-06, PIPE-07, PIPE-08, PIPE-09, PIPE-10, PIPE-11
