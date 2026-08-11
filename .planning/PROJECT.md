@@ -14,13 +14,12 @@ Every claimed result must be reproducible, source-grounded, and understandable e
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Build a local Python pipeline that ingests `app_logs_7days.jsonl`, detects data-quality issues, applies explicit validation and cleaning decisions, and preserves the original input unchanged. — Validated in Phase 1: Auditable Log Pipeline & Analysis
+- [x] Store the cleaned logs in a justified structured format and produce executable SQL or pandas analysis with recorded results for all four customer questions. — Validated in Phase 1: Auditable Log Pipeline & Analysis
+- [x] Document how many records were rejected or repaired, grouped by data-quality issue and supported by pipeline evidence. — Validated in Phase 1: Auditable Log Pipeline & Analysis
 
 ### Active
 
-- [ ] Build a local Python pipeline that ingests `app_logs_7days.jsonl`, detects data-quality issues, applies explicit validation and cleaning decisions, and preserves the original input unchanged.
-- [ ] Store the cleaned logs in a justified structured format and produce executable SQL or pandas analysis with recorded results for all four customer questions.
-- [ ] Document how many records were rejected or repaired, grouped by data-quality issue and supported by pipeline evidence.
 - [ ] Produce an AWS daily-pipeline architecture diagram and an English explanation of no more than one page, including data flow, service choices, IAM considerations, and explicit uncertainties.
 - [ ] Build a searchable knowledge base from all eight supplied operational documents after applying the provided chunking and RAG-evaluation guidance.
 - [ ] Preserve source, section, version, effective date, and ownership metadata so retrieved content is attributable and version conflicts can be resolved deterministically.
@@ -97,4 +96,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-11 after initialization*
+*Last updated: 2026-08-11 after Phase 1 completion (Auditable Log Pipeline & Analysis — 30/30 verified)*
