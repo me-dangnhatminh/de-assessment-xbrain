@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import date
 from pathlib import Path
 
 import duckdb
 
 from pipeline.__main__ import main
-
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 SOURCE = REPOSITORY_ROOT / "docs/onboard/datapack/data/app_logs_7days.jsonl"
@@ -56,7 +56,7 @@ def test_trace_preserves_source_provenance_and_normalizes_real_error(tmp_path: P
         1,
         "2026-07-27T00:02:47Z",
         "2026-07-27T00:02:47+00:00",
-        "2026-07-27",
+        date(2026, 7, 27),
         "ERR SMTPConnRefused host=mail-gw",
         "SMTPConnRefused",
         '{"host":"mail-gw"}',
@@ -130,6 +130,5 @@ def test_trace_rejects_output_inside_immutable_source_tree(tmp_path: Path) -> No
 def test_trace_rejects_invalid_or_out_of_range_source_lines(tmp_path: Path) -> None:
     assert main(["trace", "--source-line", "0", "--output-root", str(tmp_path / "zero")]) != 0
     assert (
-        main(["trace", "--source-line", "999999", "--output-root", str(tmp_path / "missing")])
-        != 0
+        main(["trace", "--source-line", "999999", "--output-root", str(tmp_path / "missing")]) != 0
     )
