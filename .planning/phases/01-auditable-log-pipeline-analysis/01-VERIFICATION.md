@@ -1,13 +1,13 @@
 ---
 phase: 01-auditable-log-pipeline-analysis
-verified: 2026-08-11T16:06:04Z
+verified: 2026-08-11T16:25:58Z
 status: verified
-score: 29/30 must-haves verified
-behavior_unverified: 1
+score: 30/30 must-haves verified
+behavior_unverified: 0
 overrides_applied: 0
 re_verification:
-  previous_status: gaps_found
-  previous_score: 22/30
+  previous_status: verified
+  previous_score: 29/30
   gaps_closed:
     - "Descendant output-root symlinks can escape the approved root and reach supplied inputs; every write and cleanup target is now resolved and authorized, and evidence/processed symlink regressions fail closed."
     - "A self-consistent forged ledger/Parquet/analysis set could be rebuilt and accepted; verification now reconstructs ledger and Parquet bytes from CANONICAL_LOG_INPUT and compares them byte-for-byte."
@@ -16,6 +16,7 @@ re_verification:
     - "Replacement decoding misjudged UTF-8 and json.loads accepted NaN/Infinity; strict decoding, a rejecting parse_constant hook, and allow_nan=False serialization are wired and tested."
     - "normalize_timestamp() corrupted compact/hour-only offsets; offset provenance is extracted from a grammar preserving Z, +07:00, +0700, and +07."
     - "The final expected manifest/run_id was rebuilt from the forged output set; the verifier now requires live ledger/Parquet bytes to match a canonical-input reconstruction before run_id comparison."
+    - "Clean-checkout locked sync and trace were not exercised without an existing .venv; make clean-checkout-verify now proves them in a fresh Docker container built from the committed tree."
   regressions: []
   gaps_remaining: []
 gaps: []
@@ -24,15 +25,15 @@ gaps: []
 # Phase 1: Auditable Log Pipeline & Analysis Verification Report
 
 **Phase Goal:** As a reviewer, I want to run the complete log pipeline and customer analysis, so that I can defend every result from immutable source evidence.
-**Verified:** 2026-08-11T16:06:04Z
+**Verified:** 2026-08-11T16:25:58Z
 **Status:** verified
-**Re-verification:** Yes — after quick task 260811-uyg closed all 7 recorded gaps
+**Re-verification:** Yes — quick task 260811-uyg closed all 7 gaps, then `make clean-checkout-verify` closed the last behavior-unverified truth
 
 ## User Flow Coverage
 
 | User-story step | Expected outcome | Codebase evidence | Status |
 | --- | --- | --- | --- |
-| Create locked environment | `uv sync --locked` works without relying on a prior environment | `uv sync --locked --offline` succeeded; clean clone was not exercised | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED |
+| Create locked environment | `uv sync --locked` works without relying on a prior environment | `make clean-checkout-verify` builds a fresh Docker container from `git archive HEAD` (no `.venv`, no uv cache) and passes `uv sync --locked`; `uv lock --check` also passes | ✓ VERIFIED |
 | Run complete pipeline and analyses | Ledger, Parquet, four tables, report, and manifest are generated | `make phase1` completed; `pipeline verify --output-root data` printed `run manifest verified` | ✓ VERIFIED |
 | Trace and inspect quality decisions | Each physical line has stable ledger provenance and dispositions | `cmd_trace` runs the traced line through the production stream; ledger rows carry issues, actions, retained lines | ✓ VERIFIED |
 | Defend immutable, source-grounded results | No run can damage source and verify proves derivation from supplied bytes | Symlink escape is rejected before any write; verifier reconstructs ledger/Parquet from the canonical log | ✓ VERIFIED — BLOCKER CLOSED |
@@ -48,7 +49,7 @@ gaps: []
 | 3 | Canonical normal runs produce deterministic, row-conserving Parquet. | ✓ VERIFIED | Direct DuckDB count is 2,839; ledger derives 2,839 ACCEPT + 0 REPAIR + 84 REJECT. |
 | 4 | Four checked-in analyses answer the customer questions without manual arithmetic. | ✓ VERIFIED | Static SQL registry, four CSVs, and report-only CSV readers are wired. |
 | 5 | Trace follows the production evidence path. | ✓ VERIFIED | `cmd_trace` selects the line from `reconstruct_evidence`; parity test proves trace ledger/Parquet rows equal full-pipeline rows. |
-| 6 | A clean checkout can synchronize uv.lock and invoke trace. | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | Existing-checkout `uv sync --locked --offline` passed; no no-`.venv` clone test. |
+| 6 | A clean checkout can synchronize uv.lock and invoke trace. | ✓ VERIFIED | `make clean-checkout-verify` builds a fresh Docker container from `git archive HEAD` (no `.venv`, no uv cache), installs uv, and passes `uv sync --locked`, `uv lock --check`, and the documented trace command with all four artifacts. |
 | 7 | Trace output is stable and source hash is unchanged. | ✓ VERIFIED | `test_trace_is_stable_across_fresh_output_roots` and source-hash assertions pass in suite evidence. |
 | 8 | Duplicates cite the first retained line. | ✓ VERIFIED | Only ACCEPT/REPAIR rows are retained; rejected rows are never cross-referenced (regression test added). |
 | 9 | ACCEPT/REPAIR/REJECT precedence preserves independent issues. | ✓ VERIFIED | `choose_final_action()` implements reject > repair > accept; focused tests cover it. |
@@ -74,7 +75,7 @@ gaps: []
 | 29 | Plan 07 targeted integrity check preserves supplied source. | ✓ VERIFIED | Canonical `pipeline verify` and `git diff --exit-code -- docs/onboard` passed. |
 | 30 | Plan 08 binds canonical input and independently measures counts. | ✓ VERIFIED | `require_canonical_log_input`, `_verify_input_binding`, `_parquet_row_count`, and `_ledger_action_counts` are substantive and tested. |
 
-**Score:** 29/30 truths verified (1 present, behavior-unverified).
+**Score:** 30/30 truths verified.
 
 ### Required Artifacts
 
@@ -116,6 +117,7 @@ All 35 plan-declared artifacts pass the GSD existence/substance checker, and bot
 | Behavior | Command | Result | Status |
 | --- | --- | --- | --- |
 | Locked dependency sync | `uv sync --locked --offline` | Resolved/checked packages in this checkout | ✓ PASS |
+| Clean-checkout locked sync + trace | `make clean-checkout-verify` (fresh Docker container from `git archive HEAD`) | `uv sync --locked` installed the exact locked versions; `uv lock --check` passed; trace wrote all four artifacts | ✓ PASS |
 | Code quality | `ruff check .` and `ruff format --check --exclude .planning .` | Both passed | ✓ PASS |
 | Compilation | `python -m compileall -q pipeline` | Passed | ✓ PASS |
 | Canonical evidence verification | `make phase1` then `pipeline verify --output-root data` | `run manifest verified` | ✓ PASS |
@@ -135,7 +137,7 @@ SKIPPED — no phase-declared or conventional probe scripts exist.
 
 | Requirement | Status | Evidence |
 | --- | --- | --- |
-| RPRO-01 | ? NEEDS HUMAN | Locked sync works here; clean clone without `.venv` not exercised. |
+| RPRO-01 | ✓ SATISFIED | `make clean-checkout-verify` (fresh Docker container, no `.venv`, no uv cache) passes `uv sync --locked`, `uv lock --check`, and the documented trace command. |
 | RPRO-02 | ✓ SATISFIED | Symlink escape rejected before writes; verifier proves ledger/Parquet derive from the canonical log. |
 | PIPE-01 | ✓ SATISFIED | Bounded physical-line iterator retains provenance with strict UTF-8 validity. |
 | PIPE-02 | ✓ SATISFIED | Non-standard JSON constants are rejected; UTF-8 validity is judged by strict decoding. |
@@ -164,21 +166,22 @@ SKIPPED — no phase-declared or conventional probe scripts exist.
 
 No unreferenced `TBD`, `FIXME`, or `XXX` markers were found in Phase 1 code/evidence files.
 
-### Human Verification Required After Gap Closure
+### Clean-Checkout Verification (formerly human-required)
 
-1. **Clean locked checkout**
-
-   **Test:** Clone fresh with no `.venv`, run `uv sync --locked`, then `uv run --locked python -m pipeline trace --output-root /tmp/trace`.
-
-   **Expected:** Commands succeed without ambient packages or the repository fallback.
-
-   **Why human:** This verifier used an existing checkout; it cannot establish fresh-machine behavior.
+`make clean-checkout-verify` now proves the clean-machine behavior locally: it
+builds a fresh Docker container from the committed tree (`git archive HEAD` —
+no `.venv`, no uv cache, no ambient packages), installs uv, and requires
+`uv sync --locked`, `uv lock --check`, and the documented trace command to
+succeed with all four trace artifacts. This closes the last
+behavior-unverified truth without a hosted service. A reviewer who prefers a
+native run can still execute the identical commands by hand; none are required
+for the verification result.
 
 ### Gaps Summary
 
-Quick task 260811-uyg closed all seven gaps recorded by the previous verification (two integrity blockers). The output-root guard now authorizes every descendant write and cleanup target, so symlinked `evidence/`/`processed/` paths fail closed instead of escaping to supplied inputs. Verification now reconstructs the expected ledger and Parquet bytes from `CANONICAL_LOG_INPUT` with the single production stream (`pipeline/reconstruct.py`) and requires the live files to match, so a self-consistent forged set — including a same-count `raw_line` or Parquet-value change — can no longer be rebuilt and accepted. Trace, duplicate provenance, strict UTF-8/JSON handling, and ISO 8601 offset preservation all reuse or match the production path with dedicated regressions. The full suite passes (70 tests), `make phase1` regenerates byte-stable evidence, `pipeline verify` passes on `data`, and `docs/onboard` remains unchanged. One behavior remains for a human on a fresh machine: a clean-checkout locked sync and trace run without an existing `.venv`.
+Quick task 260811-uyg closed all seven gaps recorded by the previous verification (two integrity blockers). The output-root guard now authorizes every descendant write and cleanup target, so symlinked `evidence/`/`processed/` paths fail closed instead of escaping to supplied inputs. Verification now reconstructs the expected ledger and Parquet bytes from `CANONICAL_LOG_INPUT` with the single production stream (`pipeline/reconstruct.py`) and requires the live files to match, so a self-consistent forged set — including a same-count `raw_line` or Parquet-value change — can no longer be rebuilt and accepted. Trace, duplicate provenance, strict UTF-8/JSON handling, and ISO 8601 offset preservation all reuse or match the production path with dedicated regressions. The full suite passes (70 tests), `make phase1` regenerates byte-stable evidence, `pipeline verify` passes on `data`, and `docs/onboard` remains unchanged. The last behavior-unverified truth — clean-checkout locked sync plus the documented trace command — is now proven by `make clean-checkout-verify`, a fresh Docker container built from the committed tree, so all 30 truths verify without a hosted service.
 
 ---
 
-_Verified: 2026-08-11T16:06:04Z_
+_Verified: 2026-08-11T16:25:58Z_
 _Verifier: the agent (gsd-verifier)_

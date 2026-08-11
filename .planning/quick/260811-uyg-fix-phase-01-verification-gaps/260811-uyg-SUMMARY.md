@@ -75,6 +75,11 @@ environment) with atomic, green commits per work unit.
 
 ## Status
 
-`01-VERIFICATION.md` re-verified: **29/30 truths verified** (the sole remaining
-item is a clean-checkout locked sync/trace run, which requires a human on a
-fresh machine with no `.venv`).
+`01-VERIFICATION.md` re-verified: **30/30 truths verified**. The last
+behavior-unverified truth — clean-checkout `uv sync --locked` plus the
+documented trace command without an existing `.venv` — is proven by
+`make clean-checkout-verify`, which builds a fresh Docker container from the
+committed tree (`git archive HEAD`), installs uv, and passes the locked sync
+and trace commands with all four trace artifacts. No hosted CI was added;
+Docker is only an optional local verification harness, in line with the
+STACK.md avoidable-complexity guidance.

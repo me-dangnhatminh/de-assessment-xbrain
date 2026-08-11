@@ -14,6 +14,8 @@ make verify-phase1
 
 `make phase1` is the canonical D-14 command. It inventories immutable inputs, generates the ledger/Parquet/schema, runs all four analyses, renders the report and manifest, and verifies the linked evidence. The Makefile uses `uv run --locked` when `uv` is on `PATH`; this repository's existing `.venv/bin/python` is only a local fallback for environments that do not expose the `uv` executable. A clean reviewer checkout should install `uv` and use the first command above.
 
+Optionally, if Docker is available, `make clean-checkout-verify` proves the clean-checkout claim itself: it builds a fresh container from the committed tree (no `.venv`, no uv cache), installs uv, and requires `uv sync --locked` plus the documented trace command to succeed. Docker is only this verification harness — the pipeline does not depend on it.
+
 ## Independently runnable stages
 
 All stages accept `--input`, `--output-root`, and `--max-line-bytes`; `trace` remains available for one-line provenance inspection.

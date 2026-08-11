@@ -19,7 +19,7 @@ SYNC := @test -x .venv/bin/python && echo "uv is unavailable; using the existing
 LOCK_CHECK := @test -f uv.lock && echo "uv is unavailable; checked-in uv.lock present"
 endif
 
-.PHONY: sync integrity pipeline analysis report verify-phase1 phase1
+.PHONY: sync integrity pipeline analysis report verify-phase1 phase1 clean-checkout-verify
 
 sync:
 	$(SYNC)
@@ -45,3 +45,9 @@ verify-phase1: phase1
 
 phase1: sync
 	$(RUN) all --input $(INPUT) --output-root $(OUTPUT_ROOT)
+
+# Optional: simulate a fresh machine in Docker (no .venv, no uv cache) and
+# prove `uv sync --locked` plus the documented trace command work. Requires
+# docker; the pipeline itself does not depend on it.
+clean-checkout-verify:
+	bash scripts/verify-clean-checkout.sh

@@ -83,6 +83,13 @@ Do not put AWS credentials, raw secret values, or `.env` files in Git. Use the n
 | Diagram tooling | A versioned `design/aws_daily_pipeline.drawio` plus exported SVG/PNG | Mermaid CLI/Node toolchain | Diagram-as-code is optional here. A source `.drawio` file and committed render are easier for reviewers to open and do not add Node/npm to the runtime. If Mermaid is chosen, commit both `.mmd` source and a rendered SVG—never require a reviewer to install a renderer. |
 | Packaging/automation | `uv`, Make, Git | Docker, Airflow, dbt, CI/CD | Useful in production but unnecessary for a local, seven-day dataset; use simple documented commands and real Git increments instead. |
 
+One deliberate, optional exception: `make clean-checkout-verify` uses Docker
+locally to simulate a fresh machine and prove `uv sync --locked` plus the
+documented trace command work with no pre-existing `.venv` or uv cache. Docker
+is not a pipeline runtime dependency — the pipeline runs on CPython + uv — and
+the target is optional, so a reviewer without Docker can still run every other
+verification step.
+
 ## Minimal Commands to Document
 
 ```bash
