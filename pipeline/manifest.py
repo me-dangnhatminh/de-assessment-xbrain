@@ -8,12 +8,14 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
 import duckdb
 
 from pipeline.analysis import ANALYSIS_SPECS
+from pipeline.ingest import DEFAULT_MAX_LINE_BYTES
 from pipeline.integrity import (
     CANONICAL_LOG_INPUT,
     SUPPLIED_ROOT,
@@ -23,7 +25,8 @@ from pipeline.integrity import (
     validate_output_root,
 )
 from pipeline.models import Disposition
-from pipeline.write_outputs import write_json_atomic
+from pipeline.reconstruct import reconstruct_evidence
+from pipeline.write_outputs import write_json_atomic, write_parquet_atomic
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = Path("evidence/phase1/run_manifest.json")
@@ -343,6 +346,47 @@ def _verify_row_counts(
         )
 
 
+def _canonical_json_line(value: Any) -> bytes:
+    """Serialize one value exactly like the production JSONL evidence writer."""
+    return (
+        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+    ).encode("utf-8")
+
+
+def _expected_ledger_bytes(ledger_entries: list[Any]) -> bytes:
+    """Reconstruct the ledger byte stream that the production JSONL writer produces."""
+    return b"".join(_canonical_json_line(entry.as_dict()) for entry in ledger_entries)
+
+
+def _verify_reconstructed_evidence(output_root: Path) -> None:
+    """Require live ledger and Parquet bytes to equal a canonical-input reconstruction.
+
+    The run manifest and its run_id are rebuilt from the current output set, so
+    a self-consistent forged set could otherwise pass every count and hash
+    check. Reconstructing the ledger and Parquet content from
+    CANONICAL_LOG_INPUT with the production validation/normalization stream and
+    comparing bytes proves the committed evidence is source-grounded rather
+    than merely internally consistent.
+    """
+    ledger_path = output_root / "evidence/phase1/quality_ledger.jsonl"
+    parquet_path = output_root / "processed/logs_clean.parquet"
+    ledger_entries, clean_records = reconstruct_evidence(
+        CANONICAL_LOG_INPUT, DEFAULT_MAX_LINE_BYTES
+    )
+    expected_ledger_hash = hashlib.sha256(_expected_ledger_bytes(ledger_entries)).hexdigest()
+    if sha256_file(ledger_path) != expected_ledger_hash:
+        raise ManifestVerificationError(
+            "reconstructed quality ledger does not match canonical input derivation"
+        )
+    with tempfile.TemporaryDirectory(prefix="xbrain-reconstruct-") as temporary_dir:
+        expected_parquet = Path(temporary_dir) / "logs_clean.parquet"
+        write_parquet_atomic(expected_parquet, clean_records)
+        if sha256_file(parquet_path) != sha256_file(expected_parquet):
+            raise ManifestVerificationError(
+                "reconstructed Parquet does not match canonical input derivation"
+            )
+
+
 def _verify_artifact(descriptor: dict[str, Any], output_root: Path) -> None:
     relative_path = descriptor.get("path")
     if not isinstance(relative_path, str):
@@ -406,6 +450,7 @@ def verify_run_manifest(output_root: Path) -> None:
     _verify_source_inventory(manifest, source_manifest, live_inventory)
     _verify_input_binding(source_manifest, live_inventory)
     _verify_row_counts(manifest, source_manifest, resolved_root)
+    _verify_reconstructed_evidence(resolved_root)
     for artifact in manifest.get("artifacts", []):
         if not isinstance(artifact, dict):
             raise ManifestVerificationError("artifact entry is invalid")

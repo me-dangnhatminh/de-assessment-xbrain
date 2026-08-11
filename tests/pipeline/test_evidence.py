@@ -6,6 +6,7 @@ import csv
 import json
 from pathlib import Path
 
+import duckdb
 import pytest
 
 from pipeline.__main__ import main
@@ -161,6 +162,46 @@ def test_manifest_verification_derives_ledger_action_conservation(tmp_path: Path
     build_run_manifest(output_root)
 
     with pytest.raises(ManifestVerificationError, match="row_counts.accept"):
+        verify_run_manifest(output_root)
+
+
+def test_manifest_verification_rejects_forged_ledger_raw_line_after_rebuild(
+    tmp_path: Path,
+) -> None:
+    """A same-count ledger content change cannot be authenticated by a manifest rebuild."""
+    output_root = tmp_path / "output"
+    _build_evidence(output_root)
+    ledger_path = output_root / "evidence/phase1/quality_ledger.jsonl"
+    entries = [json.loads(line) for line in ledger_path.read_text(encoding="utf-8").splitlines()]
+    entries[0]["raw_line"] = entries[0]["raw_line"] + " "
+    ledger_path.write_text(
+        "".join(
+            json.dumps(entry, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+            for entry in entries
+        ),
+        encoding="utf-8",
+    )
+    build_run_manifest(output_root)
+
+    with pytest.raises(ManifestVerificationError, match="reconstructed quality ledger"):
+        verify_run_manifest(output_root)
+
+
+def test_manifest_verification_rejects_forged_parquet_value_after_rebuild(
+    tmp_path: Path,
+) -> None:
+    """A same-count Parquet value change cannot be authenticated by a manifest rebuild."""
+    output_root = tmp_path / "output"
+    _build_evidence(output_root)
+    parquet_path = output_root / "processed/logs_clean.parquet"
+    escaped_path = str(parquet_path).replace("'", "''")
+    with duckdb.connect() as connection:
+        connection.execute(f"CREATE TABLE forged AS SELECT * FROM read_parquet('{escaped_path}')")
+        connection.execute("UPDATE forged SET message_raw = 'FORGED' WHERE source_line = 1")
+        connection.execute(f"COPY forged TO '{escaped_path}' (FORMAT PARQUET, COMPRESSION zstd)")
+    build_run_manifest(output_root)
+
+    with pytest.raises(ManifestVerificationError, match="reconstructed Parquet"):
         verify_run_manifest(output_root)
 
 
