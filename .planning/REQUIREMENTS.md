@@ -23,11 +23,11 @@ Requirements for the complete assessment submission. Each requirement will map t
 - [x] **PIPE-04**: Reviewer can inspect a per-record quality ledger containing source line, issue code, action, reason, and original versus normalized values where a repair occurs.
 - [ ] **PIPE-05**: Reviewer can verify row conservation and deterministic reruns: every input record is accounted for and repeated runs with the same inputs produce the same cleaned data and quality totals.
 - [ ] **PIPE-06**: Reviewer can query a structured Parquet dataset with a documented schema and a concise rationale for choosing the format.
-- [ ] **PIPE-07**: Reviewer can reproduce which service has the most `ERROR` records across the seven-day period from checked-in SQL or pandas code and recorded results.
-- [ ] **PIPE-08**: Reviewer can reproduce system-wide daily error counts and inspect the stated, evidence-based rule used to identify any unusual day without overstating statistical certainty.
+- [x] **PIPE-07**: Reviewer can reproduce which service has the most `ERROR` records across the seven-day period from checked-in SQL or pandas code and recorded results.
+- [x] **PIPE-08**: Reviewer can reproduce system-wide daily error counts and inspect the stated, evidence-based rule used to identify any unusual day without overstating statistical certainty.
 - [ ] **PIPE-09**: Reviewer can reproduce the three most frequent normalized error types or codes and the associated service or services.
 - [ ] **PIPE-10**: Reviewer can reproduce rejected and repaired record counts grouped by issue type, with totals reconciling to the quality ledger.
-- [ ] **PIPE-11**: Reviewer can trace every reported pipeline answer to the cleaned dataset, executable analysis source, generated result table, and run manifest rather than to manual calculations.
+- [x] **PIPE-11**: Reviewer can trace every reported pipeline answer to the cleaned dataset, executable analysis source, generated result table, and run manifest rather than to manual calculations.
 
 ### AWS Daily-Pipeline Design
 
@@ -121,11 +121,11 @@ No v2 capabilities are planned for this fixed-scope assessment. Any expansion re
 | PIPE-04 | Phase 1 | Complete |
 | PIPE-05 | Phase 1 | Pending |
 | PIPE-06 | Phase 1 | Pending |
-| PIPE-07 | Phase 1 | Pending |
-| PIPE-08 | Phase 1 | Pending |
+| PIPE-07 | Phase 1 | Complete |
+| PIPE-08 | Phase 1 | Complete |
 | PIPE-09 | Phase 1 | Pending |
 | PIPE-10 | Phase 1 | Pending |
-| PIPE-11 | Phase 1 | Pending |
+| PIPE-11 | Phase 1 | Complete |
 | AWS-01 | Phase 3 | Pending |
 | AWS-02 | Phase 3 | Pending |
 | AWS-03 | Phase 3 | Pending |
