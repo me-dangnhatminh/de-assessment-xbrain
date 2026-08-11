@@ -24,8 +24,9 @@ _RE_DOC_ID = re.compile(r"^([A-Z]+-\d+)")
 # Parses "_v1" or "_v2" from the stem
 _RE_VERSION_HINT = re.compile(r"(_v\d+)$", re.IGNORECASE)
 
-# The bold metadata line is the first line that starts with "**"
-_RE_METADATA_LINE = re.compile(r"^\*\*.*\*\*", re.MULTILINE)
+# The bold metadata line: starts with "**", capture the entire line.
+# Using [^\n]* ensures we get the full line including " · Cập nhật: ..." suffix.
+_RE_METADATA_LINE = re.compile(r"^\*\*[^\n]*$", re.MULTILINE)
 
 
 def _sha256_file(path: Path) -> str:
