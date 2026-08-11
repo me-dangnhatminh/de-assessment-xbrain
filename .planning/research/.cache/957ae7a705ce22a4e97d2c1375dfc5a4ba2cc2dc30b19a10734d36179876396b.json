@@ -1,0 +1,1 @@
+{"content":"Python 3.14.7 is current; this POC should use the established 3.13 line or the verified local 3.12 baseline, constrained in pyproject and locked by uv.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-08-11T00:56:40.534Z","ttl":86400000,"kind":"docs"}

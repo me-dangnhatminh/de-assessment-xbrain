@@ -1,0 +1,1 @@
+{"content":"Boto3 Bedrock Runtime provides Converse; Bedrock control client list_foundation_models provides available IDs and lifecycle, so do not hard-code a transient model ID.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-08-11T00:56:41.868Z","ttl":86400000,"kind":"docs"}

@@ -1,0 +1,1 @@
+{"content":"Pydantic v2 is current, but an explicit standard-library validation loop is more explainable and adequate for this small fixed schema POC.","source":"web","provider":"websearch","confidence":"MEDIUM","fetched_at":"2026-08-11T00:56:41.368Z","ttl":86400000,"kind":"docs"}
