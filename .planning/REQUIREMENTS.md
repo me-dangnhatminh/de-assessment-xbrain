@@ -17,9 +17,9 @@ Requirements for the complete assessment submission. Each requirement will map t
 
 ### Log Pipeline and Analysis
 
-- [ ] **PIPE-01**: Reviewer can run a Python command that reads every line of `docs/onboard/datapack/data/app_logs_7days.jsonl` while retaining source-line provenance.
-- [ ] **PIPE-02**: Reviewer can inspect validation code that detects and assigns stable issue codes to every discovered JSON, schema, type, timestamp, categorical, and content-quality problem.
-- [ ] **PIPE-03**: Reviewer can inspect an explicit rule and rationale for whether each issue type is accepted, narrowly repaired, or rejected without editing the source file.
+- [x] **PIPE-01**: Reviewer can run a Python command that reads every line of `docs/onboard/datapack/data/app_logs_7days.jsonl` while retaining source-line provenance.
+- [x] **PIPE-02**: Reviewer can inspect validation code that detects and assigns stable issue codes to every discovered JSON, schema, type, timestamp, categorical, and content-quality problem.
+- [x] **PIPE-03**: Reviewer can inspect an explicit rule and rationale for whether each issue type is accepted, narrowly repaired, or rejected without editing the source file.
 - [ ] **PIPE-04**: Reviewer can inspect a per-record quality ledger containing source line, issue code, action, reason, and original versus normalized values where a repair occurs.
 - [ ] **PIPE-05**: Reviewer can verify row conservation and deterministic reruns: every input record is accounted for and repeated runs with the same inputs produce the same cleaned data and quality totals.
 - [ ] **PIPE-06**: Reviewer can query a structured Parquet dataset with a documented schema and a concise rationale for choosing the format.
@@ -115,9 +115,9 @@ No v2 capabilities are planned for this fixed-scope assessment. Any expansion re
 | RPRO-03 | Phase 4 | Pending |
 | RPRO-04 | Phase 4 | Pending |
 | RPRO-05 | Phase 3 | Pending |
-| PIPE-01 | Phase 1 | Pending |
-| PIPE-02 | Phase 1 | Pending |
-| PIPE-03 | Phase 1 | Pending |
+| PIPE-01 | Phase 1 | Complete |
+| PIPE-02 | Phase 1 | Complete |
+| PIPE-03 | Phase 1 | Complete |
 | PIPE-04 | Phase 1 | Pending |
 | PIPE-05 | Phase 1 | Pending |
 | PIPE-06 | Phase 1 | Pending |
@@ -167,6 +167,7 @@ No v2 capabilities are planned for this fixed-scope assessment. Any expansion re
 | DOC-06 | Phase 4 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 55 total
 - Mapped to phases: 55
 - Unmapped: 0 ✓
