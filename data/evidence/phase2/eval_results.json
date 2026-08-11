@@ -1,0 +1,508 @@
+{
+  "generated_at": "2026-08-11T23:32:26.030704+00:00",
+  "index_path": "/mnt/data/Minh/Coding/de-assessment-xbrain/data/evidence/phase2/index.sqlite",
+  "top_k": 5,
+  "total_cases": 10,
+  "summary": {
+    "retrieval_hit_totals": {
+      "pass": 9,
+      "partial": 1,
+      "fail": 0
+    },
+    "by_question_type": {
+      "direct_lookup": {
+        "pass": 4,
+        "partial": 0,
+        "fail": 0
+      },
+      "multi_source": {
+        "pass": 2,
+        "partial": 1,
+        "fail": 0
+      },
+      "version_trap": {
+        "pass": 2,
+        "partial": 0,
+        "fail": 0
+      },
+      "out_of_scope": {
+        "pass": 1,
+        "partial": 0,
+        "fail": 0
+      }
+    }
+  },
+  "results": [
+    {
+      "case_id": "Q01",
+      "question": "Thời gian sao lưu dữ liệu theo chính sách hiện hành là mấy giờ?",
+      "question_type": "direct_lookup",
+      "query_used": "sao lưu",
+      "search_mode": "current",
+      "retrieval_hit_score": "pass",
+      "groundedness_score": "pass",
+      "diagnosis": "Retrieval hit PASS: all 1 expected source(s) found in top-k. Groundedness PASS: all 1 keyword(s) present in retrieved content.",
+      "expected_sources": [
+        [
+          "POL-01",
+          "Quy định"
+        ]
+      ],
+      "actual_sources_found": [
+        [
+          "POL-01",
+          "Quy định"
+        ],
+        [
+          "POL-01",
+          "Trách nhiệm"
+        ]
+      ],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "POL-01_2.0_chunk0",
+          "doc_id": "POL-01",
+          "section": "Quy định",
+          "version": "2.0",
+          "effective_date": "2026-05",
+          "is_current": true,
+          "bm25_score": -2.2291732261783017,
+          "content_snippet": "# POL-01 — Chính sách sao lưu dữ liệu\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Phiên bản 2.0 · Ban hành: 05/2026 · Thay thế phiên bản trước\n\n## Quy định\n\n\n1. Toàn bộ cơ sở dữ liệu nghiệp vụ được sao lưu **hằng ngày lúc 23:30** (dời khỏi khung giờ chạy báo cáo cuối ngày).\n2. Bản sao lưu được lưu "
+        },
+        {
+          "chunk_id": "POL-01_2.0_chunk1",
+          "doc_id": "POL-01",
+          "section": "Trách nhiệm",
+          "version": "2.0",
+          "effective_date": "2026-05",
+          "is_current": true,
+          "bm25_score": -2.1279804942004708,
+          "content_snippet": "# POL-01 — Chính sách sao lưu dữ liệu\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Phiên bản 2.0 · Ban hành: 05/2026 · Thay thế phiên bản trước\n\n## Trách nhiệm\n\n\nNhân viên vận hành trực ca kiểm tra job sao lưu mỗi sáng; báo cáo tháng gửi bộ phận kiểm soát nội bộ.\n"
+        }
+      ]
+    },
+    {
+      "case_id": "Q02",
+      "question": "Ngưỡng CRITICAL của tỉ lệ ERROR trong 15 phút là bao nhiêu?",
+      "question_type": "direct_lookup",
+      "query_used": "ngưỡng",
+      "search_mode": "current",
+      "retrieval_hit_score": "pass",
+      "groundedness_score": "pass",
+      "diagnosis": "Retrieval hit PASS: all 1 expected source(s) found in top-k. Groundedness PASS: all 1 keyword(s) present in retrieved content.",
+      "expected_sources": [
+        [
+          "GUIDE-01",
+          "Ngưỡng cảnh báo hiện hành"
+        ]
+      ],
+      "actual_sources_found": [
+        [
+          "GUIDE-01",
+          "Ngưỡng cảnh báo hiện hành"
+        ]
+      ],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "GUIDE-01_v0_chunk1",
+          "doc_id": "GUIDE-01",
+          "section": "Ngưỡng cảnh báo hiện hành",
+          "version": null,
+          "effective_date": "2026-06",
+          "is_current": true,
+          "bm25_score": -4.363897527388422,
+          "content_snippet": "# GUIDE-01 — Hướng dẫn giám sát hệ thống\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Cập nhật: 06/2026\n\n## Ngưỡng cảnh báo hiện hành\n\n\n| Chỉ số | Ngưỡng WARN | Ngưỡng CRITICAL |\n|---|---|---|\n| Tỉ lệ ERROR / tổng log (15') | > 2% | > 5% |\n| Thời gian phản hồi web-portal | > 1.5s | > 3s |\n| Queue no"
+        }
+      ]
+    },
+    {
+      "case_id": "Q03",
+      "question": "Khi nào phải escalation lên cấp 3?",
+      "question_type": "direct_lookup",
+      "query_used": "escalation",
+      "search_mode": "current",
+      "retrieval_hit_score": "pass",
+      "groundedness_score": "pass",
+      "diagnosis": "Retrieval hit PASS: all 1 expected source(s) found in top-k. Groundedness PASS: all 3 keyword(s) present in retrieved content.",
+      "expected_sources": [
+        [
+          "SOP-02",
+          "Luồng escalation"
+        ]
+      ],
+      "actual_sources_found": [
+        [
+          "SOP-02",
+          "Luồng escalation"
+        ],
+        [
+          "SOP-01",
+          "Trường hợp restart KHÔNG giải quyết được"
+        ],
+        [
+          "SOP-02",
+          "Phân mức sự cố"
+        ]
+      ],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "SOP-02_v0_chunk1",
+          "doc_id": "SOP-02",
+          "section": "Luồng escalation",
+          "version": null,
+          "effective_date": "2026-04",
+          "is_current": true,
+          "bm25_score": -2.1809026777503187,
+          "content_snippet": "# SOP-02 — Quy trình escalation sự cố\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Ban hành: 04/2026\n\n## Luồng escalation\n\n\n1. **Mức 1 — Vận hành trực ca:** nhận cảnh báo, chẩn đoán theo FAQ-01, xử lý theo SOP-01.\n2. **Mức 2 — Kỹ sư hệ thống:** khi mức 1 không xử được sau 2 lần thử, hoặc sự cố P2 tr"
+        },
+        {
+          "chunk_id": "SOP-01_v0_chunk2",
+          "doc_id": "SOP-01",
+          "section": "Trường hợp restart KHÔNG giải quyết được",
+          "version": null,
+          "effective_date": "2026-03",
+          "is_current": true,
+          "bm25_score": -1.9649933126530372,
+          "content_snippet": "# SOP-01 — Quy trình khởi động lại dịch vụ\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Ban hành: 03/2026 · Người duyệt: Trưởng phòng Vận hành\n\n## Trường hợp restart KHÔNG giải quyết được\n\n\nKhông restart quá 2 lần liên tiếp. Sau lần thứ 2 vẫn lỗi → chuyển escalation mức 2 (xem SOP-02).\n"
+        },
+        {
+          "chunk_id": "SOP-02_v0_chunk0",
+          "doc_id": "SOP-02",
+          "section": "Phân mức sự cố",
+          "version": null,
+          "effective_date": "2026-04",
+          "is_current": true,
+          "bm25_score": -1.4908902220432756,
+          "content_snippet": "# SOP-02 — Quy trình escalation sự cố\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Ban hành: 04/2026\n\n## Phân mức sự cố\n\n\n| Mức | Định nghĩa | Ví dụ | Thời hạn phản ứng |\n|---|---|---|---|\n| **P1** | Dịch vụ thanh toán hoặc đăng nhập ngưng toàn bộ | payment-api down, khách không giao dịch được | 15 "
+        }
+      ]
+    },
+    {
+      "case_id": "Q04",
+      "question": "Job batch-report chạy lúc mấy giờ hàng ngày?",
+      "question_type": "direct_lookup",
+      "query_used": "lịch chạy",
+      "search_mode": "current",
+      "retrieval_hit_score": "pass",
+      "groundedness_score": "pass",
+      "diagnosis": "Retrieval hit PASS: all 1 expected source(s) found in top-k. Groundedness PASS: all 1 keyword(s) present in retrieved content.",
+      "expected_sources": [
+        [
+          "RUN-01",
+          "Lịch chạy"
+        ]
+      ],
+      "actual_sources_found": [
+        [
+          "RUN-01",
+          "Lịch chạy"
+        ]
+      ],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "RUN-01_v0_chunk0",
+          "doc_id": "RUN-01",
+          "section": "Lịch chạy",
+          "version": null,
+          "effective_date": "2026-05",
+          "is_current": true,
+          "bm25_score": -2.7944958478138706,
+          "content_snippet": "# RUN-01 — Runbook job báo cáo cuối ngày (batch-report)\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Cập nhật: 05/2026\n\n## Lịch chạy\n\n\n- Job `batch-report` chạy **23:00 hằng ngày**, tổng hợp giao dịch trong ngày thành báo cáo gửi Ban điều hành lúc 07:00 sáng hôm sau.\n- Job phụ thuộc dữ liệu từ `paym"
+        }
+      ]
+    },
+    {
+      "case_id": "Q05",
+      "question": "Khi payment-api gặp lỗi HTTP 502, quy trình xử lý gồm những bước nào?",
+      "question_type": "multi_source",
+      "query_used": "502",
+      "search_mode": "current",
+      "retrieval_hit_score": "partial",
+      "groundedness_score": "pass",
+      "diagnosis": "Retrieval hit PARTIAL: 1/2 expected source(s) found. Missing: [\"('SOP-01', 'Quy trình chuẩn (theo thứ tự, KHÔNG bỏ bước)')\"]. Groundedness PASS: all 2 keyword(s) present in retrieved content.",
+      "expected_sources": [
+        [
+          "FAQ-01",
+          "3. `ERR HTTP 502 upstream=payment-api`"
+        ],
+        [
+          "SOP-01",
+          "Quy trình chuẩn (theo thứ tự, KHÔNG bỏ bước)"
+        ]
+      ],
+      "actual_sources_found": [
+        [
+          "FAQ-01",
+          "3. `ERR HTTP 502 upstream=payment-api`"
+        ]
+      ],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "FAQ-01_v0_chunk2",
+          "doc_id": "FAQ-01",
+          "section": "3. `ERR HTTP 502 upstream=payment-api`",
+          "version": null,
+          "effective_date": "2026-07",
+          "is_current": true,
+          "bm25_score": -2.889943523830283,
+          "content_snippet": "# FAQ-01 — Các lỗi thường gặp và cách xử lý\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Cập nhật: 07/2026\n\n## 3. `ERR HTTP 502 upstream=payment-api`\n\n\n- **Ý nghĩa:** web-portal gọi payment-api không được. Hầu như luôn là **hệ quả** của sự cố ở payment-api — xử lý gốc ở payment-api trước, không xử l"
+        }
+      ]
+    },
+    {
+      "case_id": "Q06",
+      "question": "Yêu cầu bảo mật khi truy cập cơ sở dữ liệu production là gì?",
+      "question_type": "multi_source",
+      "query_used": "log",
+      "search_mode": "current",
+      "retrieval_hit_score": "pass",
+      "groundedness_score": "pass",
+      "diagnosis": "Retrieval hit PASS: all 2 expected source(s) found in top-k. Groundedness PASS: all 2 keyword(s) present in retrieved content.",
+      "expected_sources": [
+        [
+          "POL-02",
+          "Quy định chung"
+        ],
+        [
+          "GUIDE-01",
+          "Quy ước log"
+        ]
+      ],
+      "actual_sources_found": [
+        [
+          "GUIDE-01",
+          "Quy ước log"
+        ],
+        [
+          "GUIDE-01",
+          "Ngưỡng cảnh báo hiện hành"
+        ],
+        [
+          "POL-02",
+          "Quy định chung"
+        ],
+        [
+          "SOP-01",
+          "Quy trình chuẩn (theo thứ tự, KHÔNG bỏ bước)"
+        ]
+      ],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "GUIDE-01_v0_chunk2",
+          "doc_id": "GUIDE-01",
+          "section": "Quy ước log",
+          "version": null,
+          "effective_date": "2026-06",
+          "is_current": true,
+          "bm25_score": -2.016540119192466,
+          "content_snippet": "# GUIDE-01 — Hướng dẫn giám sát hệ thống\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Cập nhật: 06/2026\n\n## Quy ước log\n\n\nLog 5 dịch vụ tập trung dạng JSON lines, mỗi dòng 1 sự kiện, các trường: `timestamp`, `service`, `level` (INFO/WARN/ERROR), `message`, `request_id`. **Lưu ý:** một số hệ thống cũ"
+        },
+        {
+          "chunk_id": "GUIDE-01_v0_chunk1",
+          "doc_id": "GUIDE-01",
+          "section": "Ngưỡng cảnh báo hiện hành",
+          "version": null,
+          "effective_date": "2026-06",
+          "is_current": true,
+          "bm25_score": -1.5344071874690302,
+          "content_snippet": "# GUIDE-01 — Hướng dẫn giám sát hệ thống\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Cập nhật: 06/2026\n\n## Ngưỡng cảnh báo hiện hành\n\n\n| Chỉ số | Ngưỡng WARN | Ngưỡng CRITICAL |\n|---|---|---|\n| Tỉ lệ ERROR / tổng log (15') | > 2% | > 5% |\n| Thời gian phản hồi web-portal | > 1.5s | > 3s |\n| Queue no"
+        },
+        {
+          "chunk_id": "POL-02_1.1_chunk0",
+          "doc_id": "POL-02",
+          "section": "Quy định chung",
+          "version": "1.1",
+          "effective_date": "2026-02",
+          "is_current": true,
+          "bm25_score": -1.173632202897212,
+          "content_snippet": "# POL-02 — Chính sách truy cập hệ thống\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Phiên bản 1.1 · Ban hành: 02/2026\n\n## Quy định chung\n\n\n1. Tài khoản cấp theo nguyên tắc **quyền tối thiểu** — chỉ đúng hệ thống phục vụ công việc.\n2. Truy cập database production: chỉ nhóm DBA và kỹ sư hệ thống mức "
+        },
+        {
+          "chunk_id": "SOP-01_v0_chunk1",
+          "doc_id": "SOP-01",
+          "section": "Quy trình chuẩn (theo thứ tự, KHÔNG bỏ bước)",
+          "version": null,
+          "effective_date": "2026-03",
+          "is_current": true,
+          "bm25_score": -0.9885483958388497,
+          "content_snippet": "# SOP-01 — Quy trình khởi động lại dịch vụ\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Ban hành: 03/2026 · Người duyệt: Trưởng phòng Vận hành\n\n## Quy trình chuẩn (theo thứ tự, KHÔNG bỏ bước)\n\n\n1. Kiểm tra dashboard giám sát (xem GUIDE-01) — xác nhận dịch vụ thực sự bất thường, không phải cảnh báo g"
+        }
+      ]
+    },
+    {
+      "case_id": "Q07",
+      "question": "Quy trình xử lý khi job báo cáo cuối ngày lỗi NullPointer?",
+      "question_type": "multi_source",
+      "query_used": "NullPointer",
+      "search_mode": "current",
+      "retrieval_hit_score": "pass",
+      "groundedness_score": "pass",
+      "diagnosis": "Retrieval hit PASS: all 2 expected source(s) found in top-k. Groundedness PASS: all 1 keyword(s) present in retrieved content.",
+      "expected_sources": [
+        [
+          "RUN-01",
+          "Khi job lỗi (`ERR NullPointer in ReportBuilder`)"
+        ],
+        [
+          "FAQ-01",
+          "4. `ERR NullPointer in ReportBuilder`"
+        ]
+      ],
+      "actual_sources_found": [
+        [
+          "FAQ-01",
+          "4. `ERR NullPointer in ReportBuilder`"
+        ],
+        [
+          "RUN-01",
+          "Khi job lỗi (`ERR NullPointer in ReportBuilder`)"
+        ]
+      ],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "FAQ-01_v0_chunk3",
+          "doc_id": "FAQ-01",
+          "section": "4. `ERR NullPointer in ReportBuilder`",
+          "version": null,
+          "effective_date": "2026-07",
+          "is_current": true,
+          "bm25_score": -2.4216594290594746,
+          "content_snippet": "# FAQ-01 — Các lỗi thường gặp và cách xử lý\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Cập nhật: 07/2026\n\n## 4. `ERR NullPointer in ReportBuilder`\n\n\n- **Ý nghĩa:** job báo cáo cuối ngày gặp dữ liệu đầu vào thiếu. Xem RUN-01 để chạy lại job sau khi bổ sung dữ liệu.\n"
+        },
+        {
+          "chunk_id": "RUN-01_v0_chunk1",
+          "doc_id": "RUN-01",
+          "section": "Khi job lỗi (`ERR NullPointer in ReportBuilder`)",
+          "version": null,
+          "effective_date": "2026-05",
+          "is_current": true,
+          "bm25_score": -1.7243047797171331,
+          "content_snippet": "# RUN-01 — Runbook job báo cáo cuối ngày (batch-report)\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Cập nhật: 05/2026\n\n## Khi job lỗi (`ERR NullPointer in ReportBuilder`)\n\n\n1. Kiểm tra dữ liệu đầu vào ngày đó có thiếu không (thường do sự cố payment-api trong ngày làm hụt giao dịch).\n2. Nếu thiếu dữ"
+        }
+      ]
+    },
+    {
+      "case_id": "Q08",
+      "question": "Thời gian lưu giữ bản sao lưu theo chính sách hiện hành là bao lâu?",
+      "question_type": "version_trap",
+      "query_used": "lưu trữ",
+      "search_mode": "current",
+      "retrieval_hit_score": "pass",
+      "groundedness_score": "pass",
+      "diagnosis": "Retrieval hit PASS: all 1 expected source(s) found in top-k. Groundedness PASS: all 1 keyword(s) present in retrieved content. Version trap: POL-01 v2 (current) returned; superseded v1 correctly excluded.",
+      "expected_sources": [
+        [
+          "POL-01",
+          "Quy định"
+        ]
+      ],
+      "actual_sources_found": [
+        [
+          "POL-01",
+          "Quy định"
+        ]
+      ],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "POL-01_2.0_chunk0",
+          "doc_id": "POL-01",
+          "section": "Quy định",
+          "version": "2.0",
+          "effective_date": "2026-05",
+          "is_current": true,
+          "bm25_score": -2.2697470000872717,
+          "content_snippet": "# POL-01 — Chính sách sao lưu dữ liệu\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Phiên bản 2.0 · Ban hành: 05/2026 · Thay thế phiên bản trước\n\n## Quy định\n\n\n1. Toàn bộ cơ sở dữ liệu nghiệp vụ được sao lưu **hằng ngày lúc 23:30** (dời khỏi khung giờ chạy báo cáo cuối ngày).\n2. Bản sao lưu được lưu "
+        }
+      ]
+    },
+    {
+      "case_id": "Q09",
+      "question": "So sánh chính sách sao lưu phiên bản cũ và phiên bản mới khác nhau thế nào?",
+      "question_type": "version_trap",
+      "query_used": "sao lưu",
+      "search_mode": "all",
+      "retrieval_hit_score": "pass",
+      "groundedness_score": "pass",
+      "diagnosis": "Retrieval hit PASS: all 1 expected source(s) found in top-k. Groundedness PASS: all 4 keyword(s) present in retrieved content. Version trap (comparison): both POL-01 v1 (superseded) and v2 (current) retrieved — full version history available for comparison.",
+      "expected_sources": [
+        [
+          "POL-01",
+          "Quy định"
+        ]
+      ],
+      "actual_sources_found": [
+        [
+          "POL-01",
+          "Quy định"
+        ],
+        [
+          "POL-01",
+          "Quy định"
+        ],
+        [
+          "POL-01",
+          "Trách nhiệm"
+        ],
+        [
+          "POL-01",
+          "Trách nhiệm"
+        ]
+      ],
+      "retrieved_chunks": [
+        {
+          "chunk_id": "POL-01_1.0_chunk0",
+          "doc_id": "POL-01",
+          "section": "Quy định",
+          "version": "1.0",
+          "effective_date": "2025-06",
+          "is_current": false,
+          "bm25_score": -2.335400975584632,
+          "content_snippet": "# POL-01 — Chính sách sao lưu dữ liệu\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Phiên bản 1.0 · Ban hành: 06/2025\n\n## Quy định\n\n\n1. Toàn bộ cơ sở dữ liệu nghiệp vụ được sao lưu **hằng ngày lúc 22:00**.\n2. Bản sao lưu được lưu giữ **7 ngày**, sau đó tự động xoá.\n3. Bản sao lưu lưu tại server nội b"
+        },
+        {
+          "chunk_id": "POL-01_2.0_chunk0",
+          "doc_id": "POL-01",
+          "section": "Quy định",
+          "version": "2.0",
+          "effective_date": "2026-05",
+          "is_current": true,
+          "bm25_score": -2.2291732261783017,
+          "content_snippet": "# POL-01 — Chính sách sao lưu dữ liệu\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Phiên bản 2.0 · Ban hành: 05/2026 · Thay thế phiên bản trước\n\n## Quy định\n\n\n1. Toàn bộ cơ sở dữ liệu nghiệp vụ được sao lưu **hằng ngày lúc 23:30** (dời khỏi khung giờ chạy báo cáo cuối ngày).\n2. Bản sao lưu được lưu "
+        },
+        {
+          "chunk_id": "POL-01_1.0_chunk1",
+          "doc_id": "POL-01",
+          "section": "Trách nhiệm",
+          "version": "1.0",
+          "effective_date": "2025-06",
+          "is_current": false,
+          "bm25_score": -2.2063644960332303,
+          "content_snippet": "# POL-01 — Chính sách sao lưu dữ liệu\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Phiên bản 1.0 · Ban hành: 06/2025\n\n## Trách nhiệm\n\n\nNhân viên vận hành trực ca chịu trách nhiệm kiểm tra job sao lưu chạy thành công mỗi sáng.\n"
+        },
+        {
+          "chunk_id": "POL-01_2.0_chunk1",
+          "doc_id": "POL-01",
+          "section": "Trách nhiệm",
+          "version": "2.0",
+          "effective_date": "2026-05",
+          "is_current": true,
+          "bm25_score": -2.1279804942004708,
+          "content_snippet": "# POL-01 — Chính sách sao lưu dữ liệu\n\n**Công ty Tài chính Sao Đỏ — Phòng CNTT** · Phiên bản 2.0 · Ban hành: 05/2026 · Thay thế phiên bản trước\n\n## Trách nhiệm\n\n\nNhân viên vận hành trực ca kiểm tra job sao lưu mỗi sáng; báo cáo tháng gửi bộ phận kiểm soát nội bộ.\n"
+        }
+      ]
+    },
+    {
+      "case_id": "Q10",
+      "question": "Chi phí hàng tháng cho dịch vụ cloud backup là bao nhiêu?",
+      "question_type": "out_of_scope",
+      "query_used": "chi phí cloud backup",
+      "search_mode": "current",
+      "retrieval_hit_score": "pass",
+      "groundedness_score": "pass",
+      "diagnosis": "Not found in the supplied documents. No relevant chunks retrieved — correct outcome for out-of-scope question.",
+      "expected_sources": [],
+      "actual_sources_found": [],
+      "retrieved_chunks": []
+    }
+  ]
+}

@@ -21,7 +21,7 @@ SYNC := @test -x .venv/bin/python && echo "uv is unavailable; using the existing
 LOCK_CHECK := @test -f uv.lock && echo "uv is unavailable; checked-in uv.lock present"
 endif
 
-.PHONY: sync integrity pipeline analysis report verify-phase1 phase1 clean-checkout-verify kb-build kb-search
+.PHONY: sync integrity pipeline analysis report verify-phase1 phase1 clean-checkout-verify kb-build kb-search kb-eval phase2
 
 sync:
 	$(SYNC)
@@ -67,3 +67,8 @@ kb-search: $(KB_OUTPUT_DIR)/index.sqlite
 	$(PYTHON) -m kb search --db $(KB_OUTPUT_DIR)/index.sqlite --query "sao lưu" --mode all
 
 $(KB_OUTPUT_DIR)/index.sqlite: kb-build
+
+kb-eval: $(KB_OUTPUT_DIR)/index.sqlite
+	$(PYTHON) -m kb eval --db $(KB_OUTPUT_DIR)/index.sqlite --output-dir $(KB_OUTPUT_DIR)
+
+phase2: kb-build kb-eval

@@ -5,6 +5,7 @@ Subcommands
 inventory   Discover and display the document inventory.
 build       Build the SQLite FTS5 index and write chunks.jsonl.
 search      Query the FTS5 index with current-first or all-versions mode.
+eval        Run all 10 predeclared evaluation cases and write JSON + Markdown results.
 """
 
 from __future__ import annotations
@@ -114,6 +115,38 @@ def cmd_search(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_eval(arguments: argparse.Namespace) -> int:
+    """Run all 10 predeclared evaluation cases and write JSON + Markdown evidence."""
+    from kb.eval_cases import EVAL_CASES
+    from kb.eval_report import render_eval_json, render_eval_report
+    from kb.eval_runner import run_evaluation
+
+    db_path = Path(arguments.db).expanduser().resolve()
+    output_dir = Path(arguments.output_dir).expanduser().resolve()
+    top_k = arguments.top_k
+
+    if not db_path.is_file():
+        print(f"error: index not found: {db_path}", file=sys.stderr)
+        return 2
+
+    results = run_evaluation(db_path, EVAL_CASES, top_k=top_k)
+
+    json_path = render_eval_json(results, db_path, output_dir, top_k)
+    md_path = render_eval_report(results, db_path, output_dir, top_k)
+
+    pass_count = sum(1 for r in results if r.retrieval_hit_score == "pass")
+    partial_count = sum(1 for r in results if r.retrieval_hit_score == "partial")
+    fail_count = sum(1 for r in results if r.retrieval_hit_score == "fail")
+
+    print(
+        f"eval complete: {len(results)} cases — "
+        f"{pass_count} pass, {partial_count} partial, {fail_count} fail"
+    )
+    print(f"  json:     {json_path}")
+    print(f"  report:   {md_path}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the knowledge base CLI."""
     parser = argparse.ArgumentParser(prog="python -m kb")
@@ -150,6 +183,25 @@ def build_parser() -> argparse.ArgumentParser:
     )
     search_parser.add_argument("--top-k", type=int, default=5, help="number of results to return")
     search_parser.set_defaults(handler=cmd_search)
+
+    # --- eval ---
+    eval_parser = subcommands.add_parser(
+        "eval", help="run predeclared evaluation cases and write JSON + Markdown report"
+    )
+    eval_parser.add_argument(
+        "--db",
+        default=str(DEFAULT_OUTPUT_DIR / "index.sqlite"),
+        help="path to index.sqlite (default: data/evidence/phase2/index.sqlite)",
+    )
+    eval_parser.add_argument(
+        "--output-dir",
+        default=str(DEFAULT_OUTPUT_DIR),
+        help="directory for eval_results.json and eval_report.md",
+    )
+    eval_parser.add_argument(
+        "--top-k", type=int, default=5, help="number of results to retrieve per case (default 5)"
+    )
+    eval_parser.set_defaults(handler=cmd_eval)
 
     return parser
 
