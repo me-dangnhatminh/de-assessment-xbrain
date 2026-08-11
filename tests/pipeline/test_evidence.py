@@ -179,6 +179,7 @@ def test_manifest_verification_rejects_malformed_live_conservation_evidence(
     """Malformed ledger and Parquet evidence fail closed instead of defaulting counts."""
     output_root = tmp_path / "output"
     _build_evidence(output_root)
+    build_run_manifest(output_root)
     target = output_root / relative_path
     target.write_text(content, encoding="utf-8")
     if target.suffix == ".jsonl":
