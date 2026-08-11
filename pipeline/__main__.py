@@ -16,6 +16,7 @@ from typing import Any
 
 import duckdb
 
+from pipeline.analysis import AnalysisError, run_all_analyses, run_analysis
 from pipeline.ingest import canonical_record_digest, iter_source_lines, parse_json_line
 from pipeline.integrity import (
     SourceIntegrityError,
@@ -478,6 +479,21 @@ def cmd_run(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_analyze(arguments: argparse.Namespace) -> int:
+    """Generate registered customer-analysis tables from existing cleaned Parquet."""
+    output_root = validate_output_root(Path(arguments.output_root))
+    parquet_path = output_root / "processed/logs_clean.parquet"
+    if arguments.analysis_id is None:
+        generated_paths = run_all_analyses(parquet_path=parquet_path, output_root=output_root)
+    else:
+        generated_paths = [
+            run_analysis(arguments.analysis_id, parquet_path=parquet_path, output_root=output_root)
+        ]
+    for generated_path in generated_paths:
+        print(generated_path.relative_to(output_root).as_posix())
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the durable stage-oriented command-line interface."""
     parser = argparse.ArgumentParser(prog="python -m pipeline")
@@ -503,6 +519,13 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--output-root", required=True, type=Path)
     run_parser.add_argument("--max-line-bytes", default=MAX_LINE_BYTES, type=int)
     run_parser.set_defaults(handler=cmd_run)
+    analyze_parser = subcommands.add_parser(
+        "analyze", help="run registered static SQL over cleaned Parquet"
+    )
+    analyze_parser.add_argument("--analysis-id")
+    analyze_parser.add_argument("--input", default=DEFAULT_INPUT, type=Path)
+    analyze_parser.add_argument("--output-root", required=True, type=Path)
+    analyze_parser.set_defaults(handler=cmd_analyze)
     return parser
 
 
@@ -512,7 +535,7 @@ def main(arguments: list[str] | None = None) -> int:
     parsed_arguments = parser.parse_args(arguments)
     try:
         return parsed_arguments.handler(parsed_arguments)
-    except (TraceError, SourceIntegrityError) as error:
+    except (AnalysisError, TraceError, SourceIntegrityError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
 

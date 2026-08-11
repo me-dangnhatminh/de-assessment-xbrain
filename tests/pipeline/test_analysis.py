@@ -42,7 +42,7 @@ def test_service_error_counts_uses_static_sql_and_returns_deterministic_answer(
     assert sum(counts) == error_count
 
 
-def test_service_analysis_registry_declares_all_final_contracts() -> None:
+def test_service_error_counts_registry_declares_all_final_contracts() -> None:
     """Plan 05 can add remaining SQL without renaming evidence contracts."""
     assert set(ANALYSIS_SPECS) == {
         "service-error-counts",
@@ -70,7 +70,9 @@ def test_service_analysis_registry_declares_all_final_contracts() -> None:
     ]
 
 
-def test_service_analysis_output_is_byte_stable_and_cli_runs_selected_id(tmp_path: Path) -> None:
+def test_service_error_counts_output_is_byte_stable_and_cli_runs_selected_id(
+    tmp_path: Path,
+) -> None:
     """The selected-ID CLI uses the registered SQL path and stable CSV serialization."""
     output_root = tmp_path / "output"
     command = [
@@ -83,6 +85,7 @@ def test_service_analysis_output_is_byte_stable_and_cli_runs_selected_id(tmp_pat
         str(output_root),
     ]
 
+    assert main(["run", "--input", str(SOURCE), "--output-root", str(output_root)]) == 0
     assert main(command) == 0
     result_path = output_root / "evidence/phase1/tables/01_service_error_counts.csv"
     first_hash = sha256_file(result_path)
@@ -90,7 +93,7 @@ def test_service_analysis_output_is_byte_stable_and_cli_runs_selected_id(tmp_pat
     assert sha256_file(result_path) == first_hash
 
 
-def test_service_analysis_binds_parquet_path_without_sql_interpolation() -> None:
+def test_service_error_counts_binds_parquet_path_without_sql_interpolation() -> None:
     """SQL has a parameter marker, keeping caller-controlled paths out of query text."""
     sql_path = REPOSITORY_ROOT / ANALYSIS_SPECS["service-error-counts"].sql_path
     sql = sql_path.read_text(encoding="utf-8")
