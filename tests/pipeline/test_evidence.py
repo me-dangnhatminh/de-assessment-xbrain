@@ -79,6 +79,58 @@ def test_manifest_verification_accepts_matching_live_source_inventory(tmp_path: 
     verify_run_manifest(output_root)
 
 
+def test_manifest_verification_rejects_foreign_input_descriptor_after_rebuild(
+    tmp_path: Path,
+) -> None:
+    """A rebuilt run manifest cannot authenticate an out-of-inventory input path."""
+    output_root = tmp_path / "output"
+    _build_evidence(output_root)
+
+    source_manifest_path = output_root / "evidence/phase1/source_manifest.json"
+    source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
+    source_manifest["input"] = {
+        "path": "pipeline/manifest.py",
+        "sha256": "0" * 64,
+    }
+    source_manifest_path.write_text(json.dumps(source_manifest, sort_keys=True), encoding="utf-8")
+    build_run_manifest(output_root)
+
+    with pytest.raises(ManifestVerificationError, match="input membership"):
+        verify_run_manifest(output_root)
+
+
+def test_manifest_verification_rejects_forged_input_hash_after_rebuild(tmp_path: Path) -> None:
+    """A rebuilt run manifest cannot authenticate a forged canonical input digest."""
+    output_root = tmp_path / "output"
+    _build_evidence(output_root)
+
+    source_manifest_path = output_root / "evidence/phase1/source_manifest.json"
+    source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
+    source_manifest["input"]["sha256"] = "0" * 64
+    source_manifest_path.write_text(json.dumps(source_manifest, sort_keys=True), encoding="utf-8")
+    build_run_manifest(output_root)
+
+    with pytest.raises(ManifestVerificationError, match="input hash mismatch"):
+        verify_run_manifest(output_root)
+
+
+def test_manifest_build_and_verification_are_repeatable(tmp_path: Path) -> None:
+    """Canonical metadata rebuilds and verification leave source evidence byte-stable."""
+    output_root = tmp_path / "output"
+    _build_evidence(output_root)
+    parquet_path = output_root / "processed/logs_clean.parquet"
+    ledger_path = output_root / "evidence/phase1/quality_ledger.jsonl"
+    before = {path: path.read_bytes() for path in (parquet_path, ledger_path)}
+
+    first = build_run_manifest(output_root)
+    verify_run_manifest(output_root)
+    second = build_run_manifest(output_root)
+    verify_run_manifest(output_root)
+
+    assert second == first
+    assert {path: path.read_bytes() for path in before} == before
+
+
 def test_manifest_verification_rejects_forged_source_inventory_after_rebuild(
     tmp_path: Path,
 ) -> None:

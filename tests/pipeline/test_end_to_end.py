@@ -44,6 +44,27 @@ def test_all_regenerates_deterministic_evidence_without_mutating_inputs(tmp_path
     assert inventory_supplied_inputs() == before
 
 
+def test_run_and_all_reject_foreign_repo_local_input(tmp_path: Path) -> None:
+    """Production commands reject same-byte logs outside the supplied inventory."""
+    foreign_input = REPOSITORY_ROOT / ".phase1-foreign-input-test.jsonl"
+    output_root = tmp_path / "generated"
+    generated_parquet = output_root / "processed/logs_clean.parquet"
+    generated_parquet.parent.mkdir(parents=True)
+    generated_parquet.write_text("must survive rejected input", encoding="utf-8")
+
+    try:
+        foreign_input.write_bytes(SOURCE.read_bytes())
+        for command in ("run", "all"):
+            arguments = [command, "--input", str(foreign_input), "--output-root", str(output_root)]
+            if command == "all":
+                arguments.append("--clean")
+            assert main(arguments) == 2
+            assert generated_parquet.read_text(encoding="utf-8") == "must survive rejected input"
+            assert not (output_root / "evidence/phase1/source_manifest.json").exists()
+    finally:
+        foreign_input.unlink(missing_ok=True)
+
+
 def test_all_cli_keeps_independent_stage_contracts() -> None:
     """Every stage accepts the same reviewer paths and maximum-line safety contract."""
     parser = build_parser()
