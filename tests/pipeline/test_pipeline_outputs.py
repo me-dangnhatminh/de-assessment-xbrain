@@ -187,7 +187,9 @@ def test_integrity_inventory_is_sorted_and_rejects_supplied_output_roots(tmp_pat
     assert validate_output_root(tmp_path / "generated") == (tmp_path / "generated").resolve()
 
 
-def test_full_run_reconciles_all_lines_and_keeps_rejects_out_of_parquet(tmp_path: Path) -> None:
+def test_full_run_conservation_reconciles_all_lines_and_keeps_rejects_out_of_parquet(
+    tmp_path: Path,
+) -> None:
     """The run stage publishes complete ledger, schema, manifest, and analytical Parquet."""
     repository_root = Path(__file__).resolve().parents[2]
     source = repository_root / "docs/onboard/datapack/data/app_logs_7days.jsonl"
@@ -219,7 +221,7 @@ def test_full_run_reconciles_all_lines_and_keeps_rejects_out_of_parquet(tmp_path
     assert schema_path.is_file()
 
 
-def test_full_run_is_stable_across_fresh_roots_and_integrity_command_reports_totals(
+def test_full_run_is_deterministic_across_fresh_roots_and_integrity_command_reports_totals(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Fresh runs have byte-identical artifacts and independent integrity reporting."""
