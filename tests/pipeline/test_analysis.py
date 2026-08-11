@@ -70,6 +70,25 @@ def test_service_error_counts_registry_declares_all_final_contracts() -> None:
         "03_top_normalized_errors.sql",
         "04_quality_reconciliation.sql",
     ]
+    assert ANALYSIS_SPECS["top-normalized-errors"].parameter_names == (
+        "parquet_path",
+    )
+    assert ANALYSIS_SPECS["top-normalized-errors"].expected_columns == (
+        "rank",
+        "error_type",
+        "error_count",
+        "service_contributions_json",
+        "unclassified_error_count",
+    )
+    assert ANALYSIS_SPECS["quality-reconciliation"].parameter_names == ("ledger_path",)
+    assert ANALYSIS_SPECS["quality-reconciliation"].expected_columns == (
+        "metric_type",
+        "issue_code",
+        "final_action",
+        "record_count",
+        "issue_occurrences",
+        "is_reconciled",
+    )
 
 
 def test_service_error_counts_output_is_byte_stable_and_cli_runs_selected_id(
@@ -200,3 +219,65 @@ def test_daily_error_counts_groups_offset_boundary_records_by_event_date_utc(
 
     assert normalized_boundary_count > 0
     assert "2026-08-03" not in result_path.read_text(encoding="utf-8")
+
+
+def test_top_normalized_errors_ranks_primary_types_and_retains_service_evidence(
+    tmp_path: Path,
+) -> None:
+    """Top-three ERROR types use semantic taxonomy, not embedded secondary values."""
+    result_path = run_analysis(
+        "top-normalized-errors", parquet_path=PARQUET, output_root=tmp_path / "output"
+    )
+
+    rows = list(csv.DictReader(result_path.open(encoding="utf-8")))
+    assert [(row["rank"], row["error_type"], row["error_count"]) for row in rows] == [
+        ("1", "CONNECTION_TIMEOUT", "114"),
+        ("2", "HTTP_502", "41"),
+        ("3", "NULL_POINTER", "37"),
+    ]
+    assert rows[0]["service_contributions_json"] == '{"payment-api":114}'
+    assert rows[1]["service_contributions_json"] == '{"web-portal":41}'
+    assert rows[2]["service_contributions_json"] == '{"batch-report":37}'
+    assert {row["unclassified_error_count"] for row in rows} == {"35"}
+
+
+def test_top_normalized_errors_has_deterministic_tie_boundary_and_error_only_filter(
+    tmp_path: Path,
+) -> None:
+    """Equal semantic types remain separate and alphabetically decide the third slot."""
+    parquet_path = tmp_path / "tie.parquet"
+    with duckdb.connect() as connection:
+        connection.execute(
+            "CREATE TABLE source(level VARCHAR, error_type VARCHAR, service VARCHAR)"
+        )
+        connection.executemany(
+            "INSERT INTO source VALUES (?, ?, ?)",
+            [
+                ("ERROR", "ALPHA", "service-b"),
+                ("ERROR", "BETA", "service-a"),
+                ("ERROR", "CHARLIE", "service-a"),
+                ("ERROR", "DELTA", "service-a"),
+                ("ERROR", "UNCLASSIFIED_ERROR", "service-z"),
+                ("INFO", "INFO_SHOULD_NOT_COUNT", "service-z"),
+                ("WARN", "WARN_SHOULD_NOT_COUNT", "service-z"),
+            ],
+        )
+        connection.execute("COPY source TO ? (FORMAT PARQUET)", [str(parquet_path)])
+
+    result_path = run_analysis(
+        "top-normalized-errors", parquet_path=parquet_path, output_root=tmp_path / "output"
+    )
+    rows = list(csv.DictReader(result_path.open(encoding="utf-8")))
+
+    assert [row["error_type"] for row in rows] == ["ALPHA", "BETA", "CHARLIE"]
+    assert all(row["error_count"] == "1" for row in rows)
+    assert all(row["unclassified_error_count"] == "1" for row in rows)
+
+
+def test_top_normalized_errors_sql_binds_the_parquet_path() -> None:
+    """The semantic ranking query keeps the caller-controlled path parameter-bound."""
+    sql_path = REPOSITORY_ROOT / ANALYSIS_SPECS["top-normalized-errors"].sql_path
+    sql = sql_path.read_text(encoding="utf-8")
+
+    assert "read_parquet(?)" in sql
+    assert str(PARQUET) not in sql
