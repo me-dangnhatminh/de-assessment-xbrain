@@ -78,7 +78,15 @@ def test_makefile_and_readme_publish_the_locked_reviewer_path() -> None:
     makefile = (REPOSITORY_ROOT / "Makefile").read_text(encoding="utf-8")
     readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
 
-    for target in ("sync:", "integrity:", "pipeline:", "analysis:", "report:", "verify-phase1:", "phase1:"):
+    for target in (
+        "sync:",
+        "integrity:",
+        "pipeline:",
+        "analysis:",
+        "report:",
+        "verify-phase1:",
+        "phase1:",
+    ):
         assert target in makefile
     assert "uv run --locked python -m pipeline" in makefile
     assert "make phase1" in readme

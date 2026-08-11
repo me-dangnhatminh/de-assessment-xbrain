@@ -16,7 +16,7 @@ from typing import Any
 
 import duckdb
 
-from pipeline.analysis import AnalysisError, run_all_analyses, run_analysis
+from pipeline.analysis import ANALYSIS_SPECS, AnalysisError, run_all_analyses, run_analysis
 from pipeline.ingest import canonical_record_digest, iter_source_lines, parse_json_line
 from pipeline.integrity import (
     SourceIntegrityError,
@@ -29,8 +29,10 @@ from pipeline.integrity import (
 from pipeline.integrity import (
     validate_output_root as validate_generated_output_root,
 )
+from pipeline.manifest import ManifestVerificationError, build_run_manifest, verify_run_manifest
 from pipeline.models import CleanRecord, Disposition, LedgerEntry, Normalization
 from pipeline.normalize import normalize_error, normalize_timestamp
+from pipeline.report import render_report
 from pipeline.validation import choose_final_action, make_issue, validate_record
 from pipeline.write_outputs import (
     write_json_atomic,
@@ -46,6 +48,15 @@ DEFAULT_INPUT = REPOSITORY_ROOT / "docs/onboard/datapack/data/app_logs_7days.jso
 SQL_PATH = REPOSITORY_ROOT / "pipeline/sql/00_tracer_service_error_counts.sql"
 REQUIRED_FIELDS = ("timestamp", "service", "level", "message", "request_id")
 MAX_LINE_BYTES = 1_048_576
+GENERATED_PHASE1_PATHS = (
+    Path("processed/logs_clean.parquet"),
+    Path("evidence/phase1/quality_ledger.jsonl"),
+    Path("evidence/phase1/schema.json"),
+    Path("evidence/phase1/source_manifest.json"),
+    Path("evidence/phase1/run_manifest.json"),
+    Path("evidence/phase1/report.md"),
+    *(spec.result_path for spec in ANALYSIS_SPECS.values()),
+)
 
 
 class TraceError(ValueError):
@@ -420,6 +431,25 @@ def cmd_integrity(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def clean_generated_outputs(output_root: Path) -> None:
+    """Remove only known Phase 1 artifacts from a validated generated-output root."""
+    resolved_root = validate_generated_output_root(output_root)
+    if resolved_root in {REPOSITORY_ROOT, REPOSITORY_ROOT / "docs/onboard"}:
+        raise SourceIntegrityError("clean refuses the repository root and supplied source tree")
+    for relative_path in GENERATED_PHASE1_PATHS:
+        target = resolved_root / relative_path
+        if target.is_file() or target.is_symlink():
+            target.unlink()
+    for directory in (
+        resolved_root / "evidence/phase1/tables",
+        resolved_root / "evidence/phase1",
+        resolved_root / "evidence",
+        resolved_root / "processed",
+    ):
+        if directory.is_dir() and not any(directory.iterdir()):
+            directory.rmdir()
+
+
 def cmd_run(arguments: argparse.Namespace) -> int:
     """Publish reconciled ledger, schema, manifest, and typed Parquet from immutable input."""
     input_path = Path(arguments.input).expanduser().resolve()
@@ -483,7 +513,7 @@ def cmd_analyze(arguments: argparse.Namespace) -> int:
     """Generate registered customer-analysis tables from existing cleaned Parquet."""
     output_root = validate_output_root(Path(arguments.output_root))
     parquet_path = output_root / "processed/logs_clean.parquet"
-    if arguments.analysis_id is None:
+    if getattr(arguments, "analysis_id", None) is None:
         generated_paths = run_all_analyses(parquet_path=parquet_path, output_root=output_root)
     else:
         generated_paths = [
@@ -492,6 +522,50 @@ def cmd_analyze(arguments: argparse.Namespace) -> int:
     for generated_path in generated_paths:
         print(generated_path.relative_to(output_root).as_posix())
     return 0
+
+
+def cmd_report(arguments: argparse.Namespace) -> int:
+    """Publish the report and its final content-linked manifest entry."""
+    output_root = validate_output_root(Path(arguments.output_root))
+    build_run_manifest(output_root)
+    report_path = render_report(output_root)
+    build_run_manifest(output_root)
+    print(report_path.relative_to(output_root).as_posix())
+    return 0
+
+
+def cmd_verify(arguments: argparse.Namespace) -> int:
+    """Verify every manifest-linked Phase 1 artifact without regenerating it."""
+    output_root = validate_output_root(Path(arguments.output_root))
+    verify_run_manifest(output_root)
+    print("run manifest verified")
+    return 0
+
+
+def cmd_all(arguments: argparse.Namespace) -> int:
+    """Run D-14 stages in order with immutable-source checks before and after."""
+    output_root = validate_output_root(Path(arguments.output_root))
+    source_before = inventory_supplied_inputs()
+    if arguments.clean:
+        clean_generated_outputs(output_root)
+    cmd_integrity(arguments)
+    cmd_run(arguments)
+    cmd_analyze(arguments)
+    cmd_report(arguments)
+    cmd_verify(arguments)
+    assert_source_unchanged(source_before, inventory_supplied_inputs())
+    return 0
+
+
+def _add_stage_arguments(
+    parser: argparse.ArgumentParser, *, clean: bool = False, output_required: bool = True
+) -> None:
+    """Keep independently runnable stages on one reviewer-facing argument contract."""
+    parser.add_argument("--input", default=DEFAULT_INPUT, type=Path)
+    parser.add_argument("--output-root", default=Path("data"), required=output_required, type=Path)
+    parser.add_argument("--max-line-bytes", default=MAX_LINE_BYTES, type=int)
+    if clean:
+        parser.add_argument("--clean", action="store_true")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -505,27 +579,31 @@ def build_parser() -> argparse.ArgumentParser:
     trace_parser.add_argument("--max-line-bytes", default=MAX_LINE_BYTES, type=int)
     trace_parser.set_defaults(handler=cmd_trace)
     validate_parser = subcommands.add_parser("validate", help="validate every immutable log line")
-    validate_parser.add_argument("--input", default=DEFAULT_INPUT, type=Path)
-    validate_parser.add_argument("--output-root", required=True, type=Path)
-    validate_parser.add_argument("--max-line-bytes", default=MAX_LINE_BYTES, type=int)
+    _add_stage_arguments(validate_parser)
     validate_parser.set_defaults(handler=cmd_validate)
     integrity_parser = subcommands.add_parser(
         "integrity", help="inventory immutable supplied files"
     )
-    integrity_parser.add_argument("--input", default=DEFAULT_INPUT, type=Path)
+    _add_stage_arguments(integrity_parser, output_required=False)
     integrity_parser.set_defaults(handler=cmd_integrity)
     run_parser = subcommands.add_parser("run", help="publish reconciled Phase 1 base evidence")
-    run_parser.add_argument("--input", default=DEFAULT_INPUT, type=Path)
-    run_parser.add_argument("--output-root", required=True, type=Path)
-    run_parser.add_argument("--max-line-bytes", default=MAX_LINE_BYTES, type=int)
+    _add_stage_arguments(run_parser)
     run_parser.set_defaults(handler=cmd_run)
     analyze_parser = subcommands.add_parser(
         "analyze", help="run registered static SQL over cleaned Parquet"
     )
     analyze_parser.add_argument("--analysis-id")
-    analyze_parser.add_argument("--input", default=DEFAULT_INPUT, type=Path)
-    analyze_parser.add_argument("--output-root", required=True, type=Path)
+    _add_stage_arguments(analyze_parser)
     analyze_parser.set_defaults(handler=cmd_analyze)
+    report_parser = subcommands.add_parser("report", help="render the linked reviewer report")
+    _add_stage_arguments(report_parser)
+    report_parser.set_defaults(handler=cmd_report)
+    verify_parser = subcommands.add_parser("verify", help="verify linked Phase 1 evidence")
+    _add_stage_arguments(verify_parser)
+    verify_parser.set_defaults(handler=cmd_verify)
+    all_parser = subcommands.add_parser("all", help="run every Phase 1 stage in D-14 order")
+    _add_stage_arguments(all_parser, clean=True)
+    all_parser.set_defaults(handler=cmd_all)
     return parser
 
 
@@ -535,7 +613,7 @@ def main(arguments: list[str] | None = None) -> int:
     parsed_arguments = parser.parse_args(arguments)
     try:
         return parsed_arguments.handler(parsed_arguments)
-    except (AnalysisError, TraceError, SourceIntegrityError) as error:
+    except (AnalysisError, ManifestVerificationError, TraceError, SourceIntegrityError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
 
