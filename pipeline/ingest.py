@@ -49,9 +49,9 @@ def iter_source_lines(
     source_sha256 = _sha256_file(resolved_path)
     with resolved_path.open("rb") as source:
         for source_line, raw_bytes in enumerate(source, start=1):
-            raw_line = raw_bytes.decode("utf-8", errors="replace").rstrip("\r\n")
             preparse_issues: tuple[Issue, ...] = ()
             if len(raw_bytes) > max_line_bytes:
+                raw_line = raw_bytes.decode("utf-8", errors="replace").rstrip("\r\n")
                 preparse_issues = (
                     _issue(
                         "LINE_TOO_LARGE",
@@ -59,13 +59,20 @@ def iter_source_lines(
                         original_value=len(raw_bytes),
                     ),
                 )
-            elif "\ufffd" in raw_line:
-                preparse_issues = (
-                    _issue(
-                        "TEXT_INVALID_UTF8",
-                        "physical line is not valid UTF-8 and cannot be parsed as JSON text",
-                    ),
-                )
+            else:
+                try:
+                    raw_line = raw_bytes.decode("utf-8").rstrip("\r\n")
+                except UnicodeDecodeError:
+                    # Byte-safe rejected-row representation: the envelope keeps a
+                    # lossy string for provenance, but strict decoding already
+                    # proved the bytes are not valid UTF-8.
+                    raw_line = raw_bytes.decode("utf-8", errors="replace").rstrip("\r\n")
+                    preparse_issues = (
+                        _issue(
+                            "TEXT_INVALID_UTF8",
+                            "physical line is not valid UTF-8 and cannot be parsed as JSON text",
+                        ),
+                    )
             yield SourceEnvelope(
                 source_path=str(resolved_path),
                 source_sha256=source_sha256,
@@ -75,13 +82,18 @@ def iter_source_lines(
             )
 
 
+def _reject_json_constant(value: str) -> None:
+    """Reject NaN/Infinity/-Infinity instead of silently accepting non-standard JSON."""
+    raise ValueError(f"non-standard JSON constant is not accepted: {value}")
+
+
 def parse_json_line(envelope: SourceEnvelope) -> tuple[dict[str, Any] | None, tuple[Issue, ...]]:
     """Parse one envelope without losing pre-parse failures or source provenance."""
     if envelope.preparse_issues:
         return None, envelope.preparse_issues
     try:
-        parsed = json.loads(envelope.raw_line)
-    except json.JSONDecodeError:
+        parsed = json.loads(envelope.raw_line, parse_constant=_reject_json_constant)
+    except (json.JSONDecodeError, ValueError):
         return None, (
             _issue(
                 "JSON_MALFORMED",
@@ -102,5 +114,7 @@ def parse_json_line(envelope: SourceEnvelope) -> tuple[dict[str, Any] | None, tu
 
 def canonical_record_digest(record: dict[str, Any]) -> str:
     """Hash the complete parsed object, independent of JSON key order or spacing."""
-    canonical = json.dumps(record, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    canonical = json.dumps(
+        record, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
+    )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()

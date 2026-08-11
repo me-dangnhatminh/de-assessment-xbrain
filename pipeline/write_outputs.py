@@ -52,9 +52,10 @@ CLEAN_RECORD_SCHEMA = (
 
 
 def _canonical_json(value: Any) -> bytes:
-    return (
-        json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
-    ).encode("utf-8")
+    serialized = json.dumps(
+        value, ensure_ascii=False, allow_nan=False, sort_keys=True, separators=(",", ":")
+    )
+    return (serialized + "\n").encode("utf-8")
 
 
 def _atomic_write_bytes(path: Path, content: bytes) -> None:

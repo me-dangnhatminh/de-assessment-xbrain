@@ -40,6 +40,9 @@ _ERROR_TYPES = {
 _ERROR_TOKEN = re.compile(r"^ERR\s+(?P<token>[A-Za-z][A-Za-z0-9_]*)\b\s*(?P<details>.*)$")
 _HTTP_502 = re.compile(r"\bHTTP\s+502\b\s*(?P<details>.*)$")
 _PARAMETER = re.compile(r"(?P<key>[A-Za-z][A-Za-z0-9_]*)=(?P<value>[^\s]+)")
+# Every offset form accepted by datetime.fromisoformat, captured verbatim:
+# Z, +07, +0700, +07:00 (and the equivalent negative forms).
+_OFFSET_SUFFIX = re.compile(r"(?P<offset>Z|[+-]\d{2}(?::?\d{2})?)\Z")
 
 
 def normalize_timestamp(timestamp_raw: str) -> NormalizedTimestamp:
@@ -48,7 +51,10 @@ def normalize_timestamp(timestamp_raw: str) -> NormalizedTimestamp:
     if parsed.tzinfo is None:
         raise ValueError("timestamp must include an offset")
     timestamp_utc = parsed.astimezone(UTC)
-    offset_raw = "Z" if timestamp_raw.endswith("Z") else timestamp_raw[-6:]
+    offset_match = _OFFSET_SUFFIX.search(timestamp_raw)
+    if offset_match is None:
+        raise ValueError("timestamp must end with a Z or numeric UTC offset")
+    offset_raw = offset_match.group("offset")
     return NormalizedTimestamp(
         timestamp_utc=timestamp_utc,
         event_date_utc=timestamp_utc.date(),
@@ -90,6 +96,10 @@ def normalize_error(message_raw: str, level: str) -> NormalizedError:
         related_component=parameters.get("component"),
         path=parameters.get("path"),
         error_parameters_json=json.dumps(
-            parameters, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+            parameters,
+            ensure_ascii=False,
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
         ),
     )

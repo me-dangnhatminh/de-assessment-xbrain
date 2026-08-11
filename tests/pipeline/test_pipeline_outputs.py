@@ -46,6 +46,28 @@ def test_normalize_timestamp_preserves_raw_offset_and_derives_utc_date() -> None
     assert offset_timestamp.timestamp_offset_raw == "+07:00"
 
 
+def test_normalize_timestamp_preserves_compact_and_hour_only_offsets() -> None:
+    """Every accepted ISO 8601 offset form is kept verbatim in provenance."""
+    compact = normalize_timestamp("2026-07-27T07:02:47+0700")
+    hour_only = normalize_timestamp("2026-07-27T07:02:47+07")
+    negative = normalize_timestamp("2026-07-27T07:02:47-07:00")
+
+    assert compact.timestamp_offset_raw == "+0700"
+    assert hour_only.timestamp_offset_raw == "+07"
+    assert negative.timestamp_offset_raw == "-07:00"
+    assert compact.timestamp_utc.isoformat() == "2026-07-27T00:02:47+00:00"
+    assert hour_only.timestamp_utc == compact.timestamp_utc
+    assert negative.timestamp_utc.isoformat() == "2026-07-27T14:02:47+00:00"
+
+
+def test_evidence_writers_reject_non_finite_json_values(tmp_path: Path) -> None:
+    """Evidence serialization fails closed on NaN/Infinity instead of writing them."""
+    with pytest.raises(ValueError):
+        write_json_atomic(tmp_path / "nan.json", {"value": float("nan")})
+    with pytest.raises(ValueError):
+        write_jsonl_atomic(tmp_path / "inf.jsonl", [{"value": float("inf")}])
+
+
 def test_normalize_error_assigns_stable_primary_types_and_secondary_values() -> None:
     """Known error signatures retain structured detail without fragmenting ranks."""
     cases = {
