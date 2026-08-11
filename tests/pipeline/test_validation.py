@@ -7,7 +7,7 @@ from pathlib import Path
 from pipeline.__main__ import main
 from pipeline.ingest import canonical_record_digest, iter_source_lines, parse_json_line
 from pipeline.models import Disposition
-from pipeline.validation import choose_final_action, validate_record
+from pipeline.validation import choose_final_action, make_issue, validate_record
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 SOURCE = REPOSITORY_ROOT / "docs/onboard/datapack/data/app_logs_7days.jsonl"
@@ -114,3 +114,48 @@ def test_validate_streams_real_source_into_one_ordered_ledger_record_per_line(
     assert len(ledger) == sum(1 for _ in SOURCE.open(encoding="utf-8"))
     assert ledger[38]["issues"][0]["issue_code"] == "JSON_MALFORMED"
     assert hashlib.sha256(SOURCE.read_bytes()).hexdigest() == source_before
+
+
+def test_duplicate_records_reference_the_first_retained_source_line(tmp_path: Path) -> None:
+    source = tmp_path / "duplicates.jsonl"
+    record = json.dumps(valid_record(), sort_keys=True)
+    source.write_text(f"{record}\n{record}\n", encoding="utf-8")
+    output_root = tmp_path / "validation"
+
+    assert main(["validate", "--input", str(source), "--output-root", str(output_root)]) == 0
+
+    ledger = [
+        json.loads(line)
+        for line in (output_root / "quality_ledger.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert ledger[0]["final_action"] == "ACCEPT"
+    assert ledger[0]["retained_source_line"] == 1
+    assert ledger[1]["final_action"] == "REJECT"
+    assert ledger[1]["retained_source_line"] == 1
+    assert ledger[1]["issues"][-1]["issue_code"] == "EXACT_DUPLICATE"
+
+
+def test_all_issues_are_retained_and_reject_overrides_repair() -> None:
+    repairable_issue = make_issue("SYNTHETIC_REPAIR", "level", "info", "INFO")
+    rejecting_issue = make_issue("REQUIRED_FIELD_MISSING", "request_id", None)
+
+    assert choose_final_action((repairable_issue,)) is Disposition.REPAIR
+    assert choose_final_action((repairable_issue, rejecting_issue)) is Disposition.REJECT
+    assert [repairable_issue.issue_code, rejecting_issue.issue_code] == [
+        "SYNTHETIC_REPAIR",
+        "REQUIRED_FIELD_MISSING",
+    ]
+
+
+def test_canonical_source_has_no_repairs_and_validation_is_deterministic(tmp_path: Path) -> None:
+    first_root = tmp_path / "first"
+    second_root = tmp_path / "second"
+
+    assert main(["validate", "--input", str(SOURCE), "--output-root", str(first_root)]) == 0
+    assert main(["validate", "--input", str(SOURCE), "--output-root", str(second_root)]) == 0
+
+    first_ledger = (first_root / "quality_ledger.jsonl").read_bytes()
+    assert first_ledger == (second_root / "quality_ledger.jsonl").read_bytes()
+    actions = [json.loads(line)["final_action"] for line in first_ledger.decode().splitlines()]
+    assert actions.count("REPAIR") == 0
+    assert actions.count("REJECT") > 0
