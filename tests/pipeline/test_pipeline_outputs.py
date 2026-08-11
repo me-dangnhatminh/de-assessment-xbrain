@@ -4,11 +4,20 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import date
 from pathlib import Path
 
 import duckdb
+import pytest
 
 from pipeline.normalize import normalize_error, normalize_timestamp
+from pipeline.integrity import (
+    SourceIntegrityError,
+    assert_source_unchanged,
+    inventory_supplied_inputs,
+    validate_output_root,
+)
+from pipeline.__main__ import main
 from pipeline.write_outputs import (
     CLEAN_RECORD_SCHEMA,
     write_csv_atomic,
@@ -159,3 +168,74 @@ def test_atomic_writers_emit_fixed_schema_and_stable_bytes(tmp_path: Path) -> No
     assert [column["name"] for column in schema["columns"]] == [
         column.name for column in CLEAN_RECORD_SCHEMA
     ]
+
+
+def test_integrity_inventory_is_sorted_and_rejects_supplied_output_roots(tmp_path: Path) -> None:
+    """Every supplied regular file is hashed and generated output cannot alias inputs."""
+    repository_root = Path(__file__).resolve().parents[2]
+    supplied_root = repository_root / "docs/onboard"
+    inventory_before = inventory_supplied_inputs(supplied_root)
+    inventory_after = inventory_supplied_inputs(supplied_root)
+
+    assert [entry["path"] for entry in inventory_before] == sorted(
+        entry["path"] for entry in inventory_before
+    )
+    assert any(entry["path"] == "datapack/data/app_logs_7days.jsonl" for entry in inventory_before)
+    assert_source_unchanged(inventory_before, inventory_after)
+    with pytest.raises(SourceIntegrityError):
+        validate_output_root(supplied_root / "generated")
+    assert validate_output_root(tmp_path / "generated") == (tmp_path / "generated").resolve()
+
+
+def test_full_run_reconciles_all_lines_and_keeps_rejects_out_of_parquet(tmp_path: Path) -> None:
+    """The run stage publishes complete ledger, schema, manifest, and analytical Parquet."""
+    repository_root = Path(__file__).resolve().parents[2]
+    source = repository_root / "docs/onboard/datapack/data/app_logs_7days.jsonl"
+    output_root = tmp_path / "run"
+
+    assert main(["run", "--input", str(source), "--output-root", str(output_root)]) == 0
+    ledger_path = output_root / "evidence/phase1/quality_ledger.jsonl"
+    manifest_path = output_root / "evidence/phase1/source_manifest.json"
+    schema_path = output_root / "evidence/phase1/schema.json"
+    parquet_path = output_root / "processed/logs_clean.parquet"
+    ledger = [json.loads(line) for line in ledger_path.read_text(encoding="utf-8").splitlines()]
+    actions = [entry["final_action"] for entry in ledger]
+
+    assert len(ledger) == sum(1 for _ in source.open(encoding="utf-8"))
+    assert actions.count("ACCEPT") + actions.count("REPAIR") + actions.count("REJECT") == len(ledger)
+    with duckdb.connect() as connection:
+        parquet_rows = connection.execute("SELECT count(*) FROM read_parquet(?)", [str(parquet_path)]).fetchone()[0]
+        date_bounds = connection.execute(
+            "SELECT min(event_date_utc), max(event_date_utc) FROM read_parquet(?)", [str(parquet_path)]
+        ).fetchone()
+    assert parquet_rows == actions.count("ACCEPT") + actions.count("REPAIR")
+    assert date_bounds == (date(2026, 7, 27), date(2026, 8, 2))
+    assert manifest_path.is_file()
+    assert schema_path.is_file()
+
+
+def test_full_run_is_stable_across_fresh_roots_and_integrity_command_reports_totals(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Fresh runs have byte-identical artifacts and independent integrity reporting."""
+    repository_root = Path(__file__).resolve().parents[2]
+    source = repository_root / "docs/onboard/datapack/data/app_logs_7days.jsonl"
+    first_root = tmp_path / "first"
+    second_root = tmp_path / "second"
+
+    assert main(["run", "--input", str(source), "--output-root", str(first_root)]) == 0
+    assert main(["run", "--input", str(source), "--output-root", str(second_root)]) == 0
+    paths = [
+        "processed/logs_clean.parquet",
+        "evidence/phase1/source_manifest.json",
+        "evidence/phase1/quality_ledger.jsonl",
+        "evidence/phase1/schema.json",
+    ]
+    assert {path: sha256_file(first_root / path) for path in paths} == {
+        path: sha256_file(second_root / path) for path in paths
+    }
+
+    assert main(["integrity", "--input", str(source)]) == 0
+    captured = capsys.readouterr()
+    assert "files=" in captured.out
+    assert "sha256=" in captured.out
