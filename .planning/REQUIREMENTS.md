@@ -37,23 +37,23 @@ Requirements for the complete assessment submission. Each requirement will map t
 
 ### Version-Aware Knowledge Base
 
-- [ ] **KB-01**: Reviewer can verify from an inventory that all eight supplied operational documents are processed and attributable to their source files.
-- [ ] **KB-02**: Reviewer can inspect structure-based chunking rules that preserve headings, tables, and procedure steps, with documented handling for exceptional sections.
-- [ ] **KB-03**: Reviewer can inspect each chunk's source document, section, version, issue or effective date, owner, active or superseded status, and content hash, with unavailable metadata represented as missing rather than invented.
-- [ ] **KB-04**: Reviewer can rebuild and query a lightweight SQLite FTS5 index from the document inventory and chunk records using documented commands.
-- [ ] **KB-05**: Reviewer receives current-policy results by applying effective-version status before relevance ranking, while superseded content remains explicitly available for historical inspection.
-- [ ] **KB-06**: Reviewer can trace every retrieval result and generated answer used in evaluation to versioned source documents and section or chunk identifiers.
-- [ ] **KB-07**: Reviewer can inspect ten predeclared evaluation questions with expected answers, expected source sections, and explicit pass, partial-pass, and fail criteria.
-- [ ] **KB-08**: Reviewer can verify the evaluation set includes direct lookup, multi-source synthesis, the intentional version conflict, and an out-of-scope refusal case.
-- [ ] **KB-09**: Reviewer can inspect recorded executions for at least three evaluation questions, including the query, retrieved evidence, answer, score, and diagnosis.
-- [ ] **KB-10**: Reviewer can distinguish retrieval hit or miss from answer groundedness in each executed evaluation rather than receiving a single opaque score.
-- [ ] **KB-11**: Reviewer can inspect saved ranked retrieval traces and an explicit demonstration that `POL-01` v2 wins current-policy queries while v1 remains identifiable as superseded history.
-- [ ] **KB-12**: Reviewer receives a clear “not found in the supplied documents” outcome for unsupported questions instead of an invented operational answer.
+- [x] **KB-01**: Reviewer can verify from an inventory that all eight supplied operational documents are processed and attributable to their source files.
+- [x] **KB-02**: Reviewer can inspect structure-based chunking rules that preserve headings, tables, and procedure steps, with documented handling for exceptional sections.
+- [x] **KB-03**: Reviewer can inspect each chunk's source document, section, version, issue or effective date, owner, active or superseded status, and content hash, with unavailable metadata represented as missing rather than invented.
+- [x] **KB-04**: Reviewer can rebuild and query a lightweight SQLite FTS5 index from the document inventory and chunk records using documented commands.
+- [x] **KB-05**: Reviewer receives current-policy results by applying effective-version status before relevance ranking, while superseded content remains explicitly available for historical inspection.
+- [x] **KB-06**: Reviewer can trace every retrieval result and generated answer used in evaluation to versioned source documents and section or chunk identifiers.
+- [x] **KB-07**: Reviewer can inspect ten predeclared evaluation questions with expected answers, expected source sections, and explicit pass, partial-pass, and fail criteria.
+- [x] **KB-08**: Reviewer can verify the evaluation set includes direct lookup, multi-source synthesis, the intentional version conflict, and an out-of-scope refusal case.
+- [x] **KB-09**: Reviewer can inspect recorded executions for at least three evaluation questions, including the query, retrieved evidence, answer, score, and diagnosis.
+- [x] **KB-10**: Reviewer can distinguish retrieval hit or miss from answer groundedness in each executed evaluation rather than receiving a single opaque score.
+- [x] **KB-11**: Reviewer can inspect saved ranked retrieval traces and an explicit demonstration that `POL-01` v2 wins current-policy queries while v1 remains identifiable as superseded history.
+- [x] **KB-12**: Reviewer receives a clear “not found in the supplied documents” outcome for unsupported questions instead of an invented operational answer.
 
 ### Knowledge-Base Update SOP
 
-- [ ] **SOP-01**: Reviewer can read an English knowledge-base update SOP of no more than one page covering new documents, revised documents, metadata and version validation, re-indexing, regression evaluation, approval, and rollback or history retention.
-- [ ] **SOP-02**: Reviewer can identify the update cadence and the accountable owner, technical operator, and approver for each SOP control without relying on unstated assumptions.
+- [x] **SOP-01**: Reviewer can read an English knowledge-base update SOP of no more than one page covering new documents, revised documents, metadata and version validation, re-indexing, regression evaluation, approval, and rollback or history retention.
+- [x] **SOP-02**: Reviewer can identify the update cadence and the accountable owner, technical operator, and approver for each SOP control without relying on unstated assumptions.
 
 ### AI Work Log
 
@@ -129,20 +129,20 @@ No v2 capabilities are planned for this fixed-scope assessment. Any expansion re
 | AWS-01 | Phase 3 | Pending |
 | AWS-02 | Phase 3 | Pending |
 | AWS-03 | Phase 3 | Pending |
-| KB-01 | Phase 2 | Pending |
-| KB-02 | Phase 2 | Pending |
-| KB-03 | Phase 2 | Pending |
-| KB-04 | Phase 2 | Pending |
-| KB-05 | Phase 2 | Pending |
-| KB-06 | Phase 2 | Pending |
-| KB-07 | Phase 2 | Pending |
-| KB-08 | Phase 2 | Pending |
-| KB-09 | Phase 2 | Pending |
-| KB-10 | Phase 2 | Pending |
-| KB-11 | Phase 2 | Pending |
-| KB-12 | Phase 2 | Pending |
-| SOP-01 | Phase 2 | Pending |
-| SOP-02 | Phase 2 | Pending |
+| KB-01 | Phase 2 | Complete |
+| KB-02 | Phase 2 | Complete |
+| KB-03 | Phase 2 | Complete |
+| KB-04 | Phase 2 | Complete |
+| KB-05 | Phase 2 | Complete |
+| KB-06 | Phase 2 | Complete |
+| KB-07 | Phase 2 | Complete |
+| KB-08 | Phase 2 | Complete |
+| KB-09 | Phase 2 | Complete |
+| KB-10 | Phase 2 | Complete |
+| KB-11 | Phase 2 | Complete |
+| KB-12 | Phase 2 | Complete |
+| SOP-01 | Phase 2 | Complete |
+| SOP-02 | Phase 2 | Complete |
 | AILOG-01 | Phase 4 | Pending |
 | AILOG-02 | Phase 4 | Pending |
 | AILOG-03 | Phase 4 | Pending |
