@@ -13,7 +13,7 @@ Requirements for the complete assessment submission. Each requirement will map t
 - [x] **RPRO-02**: Reviewer can verify that supplied briefs, readings, logs, and operational documents remain unchanged through recorded source hashes.
 - [ ] **RPRO-03**: Reviewer can inspect an evidence manifest that records input hashes, relevant configuration, commands, output paths, row counts, and non-secret runtime metadata for generated results.
 - [ ] **RPRO-04**: Reviewer can run a clean-output smoke check that regenerates required deterministic artifacts and verifies their internal consistency.
-- [ ] **RPRO-05**: Reviewer can configure AWS and Bedrock access without any credential, account identifier, or real `.env` file being committed.
+- [x] **RPRO-05**: Reviewer can configure AWS and Bedrock access without any credential, account identifier, or real `.env` file being committed.
 
 ### Log Pipeline and Analysis
 
@@ -31,9 +31,9 @@ Requirements for the complete assessment submission. Each requirement will map t
 
 ### AWS Daily-Pipeline Design
 
-- [ ] **AWS-01**: Reviewer can view a legible architecture diagram showing the proposed daily AWS data flow from ingestion and raw storage through validation, quarantine, curated storage, cataloging, and query/report access.
-- [ ] **AWS-02**: Reviewer can read an English explanation of no more than one page that justifies the selected AWS services and distinguishes the conceptual design from the locally implemented POC.
-- [ ] **AWS-03**: Reviewer can identify least-privilege IAM boundaries, monitoring or failure handling, and explicitly unresolved assumptions or uncertainties in the AWS design.
+- [x] **AWS-01**: Reviewer can view a legible architecture diagram showing the proposed daily AWS data flow from ingestion and raw storage through validation, quarantine, curated storage, cataloging, and query/report access.
+- [x] **AWS-02**: Reviewer can read an English explanation of no more than one page that justifies the selected AWS services and distinguishes the conceptual design from the locally implemented POC.
+- [x] **AWS-03**: Reviewer can identify least-privilege IAM boundaries, monitoring or failure handling, and explicitly unresolved assumptions or uncertainties in the AWS design.
 
 ### Version-Aware Knowledge Base
 
@@ -63,22 +63,22 @@ Requirements for the complete assessment submission. Each requirement will map t
 
 ### AI Response Review
 
-- [ ] **AIREV-01**: Reviewer can read an English review of no more than one page that addresses every incorrect, misleading, absolute, or context-dependent claim in the supplied AWS and RAG response.
-- [ ] **AIREV-02**: For each reviewed claim, reviewer can see what is wrong, why it is wrong, and a technically accurate replacement or conditional recommendation.
-- [ ] **AIREV-03**: Reviewer can audit a compact claim-to-source mapping that grounds corrections in current official AWS documentation, the supplied readings, or explicitly identified practical evidence.
+- [x] **AIREV-01**: Reviewer can read an English review of no more than one page that addresses every incorrect, misleading, absolute, or context-dependent claim in the supplied AWS and RAG response.
+- [x] **AIREV-02**: For each reviewed claim, reviewer can see what is wrong, why it is wrong, and a technically accurate replacement or conditional recommendation.
+- [x] **AIREV-03**: Reviewer can audit a compact claim-to-source mapping that grounds corrections in current official AWS documentation, the supplied readings, or explicitly identified practical evidence.
 
 ### Structured Extraction Prompt and Bedrock Trial
 
-- [ ] **AIEXT-01**: Reviewer can inspect an English, two-page-or-shorter extraction task containing a complete prompt with role, input contract, processing rules, and output contract.
-- [ ] **AIEXT-02**: Reviewer can validate model output against a strict JSON schema for error type, related component, extracted parameters, and explicit uncertainty or parse status.
-- [ ] **AIEXT-03**: Reviewer can verify the prompt requires missing or ambiguous values to be represented explicitly and forbids unsupported inference or fabricated fields.
-- [ ] **AIEXT-04**: Reviewer can inspect five test messages selected from the supplied data, including at least one difficult or ambiguous case, with expected JSON for each.
-- [ ] **AIEXT-05**: Reviewer can inspect a measurable 3,000-line evaluation plan covering schema validity, field-level correctness, unsupported-value or hallucination rate, parse coverage, sampling, and human-review thresholds.
-- [ ] **AIEXT-06**: Reviewer can run a Bedrock preflight that verifies configured credentials, Region, permitted model or inference profile, and compatible inference API without exposing secrets.
-- [ ] **AIEXT-07**: Reviewer can execute all five fixed cases through Amazon Bedrock using configurable model and Region settings and bounded, recorded inference parameters.
-- [ ] **AIEXT-08**: Reviewer can inspect each raw Bedrock response, locally validated JSON result, expected-versus-actual field comparison, and pass or fail diagnosis without silent repair.
-- [ ] **AIEXT-09**: Reviewer can inspect non-secret Bedrock trial metadata and honest observations about model variability, unsupported features, failures, and prompt improvements.
-- [ ] **AIEXT-10**: Reviewer can rerun the deterministic comparison and reporting step without repeating paid model calls when saved raw Bedrock responses are available.
+- [x] **AIEXT-01**: Reviewer can inspect an English, two-page-or-shorter extraction task containing a complete prompt with role, input contract, processing rules, and output contract.
+- [x] **AIEXT-02**: Reviewer can validate model output against a strict JSON schema for error type, related component, extracted parameters, and explicit uncertainty or parse status.
+- [x] **AIEXT-03**: Reviewer can verify the prompt requires missing or ambiguous values to be represented explicitly and forbids unsupported inference or fabricated fields.
+- [x] **AIEXT-04**: Reviewer can inspect five test messages selected from the supplied data, including at least one difficult or ambiguous case, with expected JSON for each.
+- [x] **AIEXT-05**: Reviewer can inspect a measurable 3,000-line evaluation plan covering schema validity, field-level correctness, unsupported-value or hallucination rate, parse coverage, sampling, and human-review thresholds.
+- [x] **AIEXT-06**: Reviewer can run a Bedrock preflight that verifies configured credentials, Region, permitted model or inference profile, and compatible inference API without exposing secrets.
+- [x] **AIEXT-07**: Reviewer can execute all five fixed cases through Amazon Bedrock using configurable model and Region settings and bounded, recorded inference parameters.
+- [x] **AIEXT-08**: Reviewer can inspect each raw Bedrock response, locally validated JSON result, expected-versus-actual field comparison, and pass or fail diagnosis without silent repair.
+- [x] **AIEXT-09**: Reviewer can inspect non-secret Bedrock trial metadata and honest observations about model variability, unsupported features, failures, and prompt improvements.
+- [x] **AIEXT-10**: Reviewer can rerun the deterministic comparison and reporting step without repeating paid model calls when saved raw Bedrock responses are available.
 
 ### Submission and Handoff
 
@@ -114,7 +114,7 @@ No v2 capabilities are planned for this fixed-scope assessment. Any expansion re
 | RPRO-02 | Phase 1 | Complete |
 | RPRO-03 | Phase 4 | Pending |
 | RPRO-04 | Phase 4 | Pending |
-| RPRO-05 | Phase 3 | Pending |
+| RPRO-05 | Phase 3 | Complete |
 | PIPE-01 | Phase 1 | Complete |
 | PIPE-02 | Phase 1 | Complete |
 | PIPE-03 | Phase 1 | Complete |
@@ -126,9 +126,9 @@ No v2 capabilities are planned for this fixed-scope assessment. Any expansion re
 | PIPE-09 | Phase 1 | Complete |
 | PIPE-10 | Phase 1 | Complete |
 | PIPE-11 | Phase 1 | Complete |
-| AWS-01 | Phase 3 | Pending |
-| AWS-02 | Phase 3 | Pending |
-| AWS-03 | Phase 3 | Pending |
+| AWS-01 | Phase 3 | Complete |
+| AWS-02 | Phase 3 | Complete |
+| AWS-03 | Phase 3 | Complete |
 | KB-01 | Phase 2 | Complete |
 | KB-02 | Phase 2 | Complete |
 | KB-03 | Phase 2 | Complete |
@@ -146,19 +146,19 @@ No v2 capabilities are planned for this fixed-scope assessment. Any expansion re
 | AILOG-01 | Phase 4 | Pending |
 | AILOG-02 | Phase 4 | Pending |
 | AILOG-03 | Phase 4 | Pending |
-| AIREV-01 | Phase 3 | Pending |
-| AIREV-02 | Phase 3 | Pending |
-| AIREV-03 | Phase 3 | Pending |
-| AIEXT-01 | Phase 3 | Pending |
-| AIEXT-02 | Phase 3 | Pending |
-| AIEXT-03 | Phase 3 | Pending |
-| AIEXT-04 | Phase 3 | Pending |
-| AIEXT-05 | Phase 3 | Pending |
-| AIEXT-06 | Phase 3 | Pending |
-| AIEXT-07 | Phase 3 | Pending |
-| AIEXT-08 | Phase 3 | Pending |
-| AIEXT-09 | Phase 3 | Pending |
-| AIEXT-10 | Phase 3 | Pending |
+| AIREV-01 | Phase 3 | Complete |
+| AIREV-02 | Phase 3 | Complete |
+| AIREV-03 | Phase 3 | Complete |
+| AIEXT-01 | Phase 3 | Complete |
+| AIEXT-02 | Phase 3 | Complete |
+| AIEXT-03 | Phase 3 | Complete |
+| AIEXT-04 | Phase 3 | Complete |
+| AIEXT-05 | Phase 3 | Complete |
+| AIEXT-06 | Phase 3 | Complete |
+| AIEXT-07 | Phase 3 | Complete |
+| AIEXT-08 | Phase 3 | Complete |
+| AIEXT-09 | Phase 3 | Complete |
+| AIEXT-10 | Phase 3 | Complete |
 | DOC-01 | Phase 4 | Pending |
 | DOC-02 | Phase 4 | Pending |
 | DOC-03 | Phase 4 | Pending |
