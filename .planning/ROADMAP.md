@@ -13,7 +13,7 @@ Deliver a reviewer-defensible assessment submission in four vertical slices: fir
 
 - [x] **Phase 1: Auditable Log Pipeline & Analysis** - Turn immutable JSONL logs into a traceable cleaned dataset and reproducible customer answers. (completed 2026-08-12)
 - [x] **Phase 2: Version-Aware Knowledge Base & Evaluation** - Deliver searchable, attributable operational knowledge with deterministic version handling and evaluation evidence. (completed 2026-08-12)
-- [ ] **Phase 3: AWS Design & Bedrock Extraction Evidence** - Deliver the conceptual AWS design and the bounded, source-grounded AI-proficiency artifacts and live trial.
+- [x] **Phase 3: AWS Design & Bedrock Extraction Evidence** - Deliver the conceptual AWS design and the bounded, source-grounded AI-proficiency artifacts and live trial. (completed 2026-08-12)
 - [ ] **Phase 4: Reviewer-Ready Submission & Handoff** - Assemble, audit, and document a clean, reproducible assessment submission.
 
 ## Phase Details
@@ -107,7 +107,13 @@ Plans:
   4. A reviewer can inspect a two-page-or-shorter strict JSON extraction prompt, five representative expected-output fixtures (including ambiguity), and a measurable 3,000-line evaluation method that prohibits fabricated values.
   5. A reviewer can run all five fixed Bedrock cases and inspect saved raw responses, local schema validation, field-level expected-versus-actual comparisons, non-secret invocation metadata, honest observations, and a deterministic re-report that does not make new paid calls.
 
-**Plans**: TBD
+**Plans**: 3/3 plans executed
+
+Plans:
+
+- [x] 03-01-PLAN.md — AWS daily-pipeline diagram and one-page explanation with IAM boundaries, failure handling, and assumptions.
+- [x] 03-02-PLAN.md — Correct the three misleading supplied AI claims with authoritative AWS links, and author the AI review.
+- [x] 03-03-PLAN.md — Bedrock preflight, five-case live trial, module/tests, prompt, and deterministic re-report.
 
 ### Phase 4: Reviewer-Ready Submission & Handoff
 
@@ -133,5 +139,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Auditable Log Pipeline & Analysis | 8/8 | Complete    | 2026-08-12 |
 | 2. Version-Aware Knowledge Base & Evaluation | 2/2 | Complete    | 2026-08-12 |
-| 3. AWS Design & Bedrock Extraction Evidence | 0/TBD | Not started | - |
-| 4. Reviewer-Ready Submission & Handoff | 0/TBD | Not started | - |
+| 3. AWS Design & Bedrock Extraction Evidence | 3/3 | Complete    | 2026-08-12 |
+| 4. Reviewer-Ready Submission & Handoff | 0/TBD | In progress | - |
