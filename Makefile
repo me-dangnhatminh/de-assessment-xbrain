@@ -72,3 +72,18 @@ kb-eval: $(KB_OUTPUT_DIR)/index.sqlite
 	$(PYTHON) -m kb eval --db $(KB_OUTPUT_DIR)/index.sqlite --output-dir $(KB_OUTPUT_DIR)
 
 phase2: kb-build kb-eval
+
+# ---------------------------------------------------------------------------
+# Phase 3: AWS Design & Bedrock extraction evidence
+# ---------------------------------------------------------------------------
+
+design-preflight: sync
+	$(PYTHON) -m design.bedrock preflight
+
+design-trial: sync
+	$(PYTHON) -m design.bedrock trial
+
+design-report:
+	$(PYTHON) -m design.bedrock report
+
+phase3: design-preflight design-trial design-report

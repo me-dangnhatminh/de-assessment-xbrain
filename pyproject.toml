@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Auditable local log-pipeline proof of concept"
 requires-python = ">=3.12,<3.15"
 dependencies = [
+    "boto3==1.43.68",
     "duckdb==1.5.5",
 ]
 
