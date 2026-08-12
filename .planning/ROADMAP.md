@@ -69,7 +69,7 @@ Plans:
 
 ### Phase 2: Version-Aware Knowledge Base & Evaluation
 
-**Goal**: A reviewer can search all supplied operational documents, receive current policy by default, inspect historical provenance, and assess the result quality.
+**Goal**: As a reviewer, I want to search all supplied operational documents, so that I can receive current policy by default, inspect historical provenance, and assess the result quality.
 **Mode:** mvp
 **Depends on**: Phase 1
 **Requirements**: KB-01, KB-02, KB-03, KB-04, KB-05, KB-06, KB-07, KB-08, KB-09, KB-10, KB-11, KB-12, SOP-01, SOP-02
