@@ -2,6 +2,8 @@
 .venv/
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.ruff_cache/
 # Bedrock trial raw responses (evidence files; commit manually with git add -f after trial run)
 design/output/responses/
 # Local environment file with real AWS credentials — NEVER commit

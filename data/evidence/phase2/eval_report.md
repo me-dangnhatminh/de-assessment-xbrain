@@ -1,7 +1,7 @@
 # KB Evaluation Report
 
-**Generated:** 2026-08-11 23:32 UTC  
-**Index:** `/mnt/data/Minh/Coding/de-assessment-xbrain/data/evidence/phase2/index.sqlite`  
+**Generated:** 2026-08-12 12:58 UTC  
+**Index:** `data/evidence/phase2/index.sqlite`  
 **Top-k:** 5  
 **Total cases:** 10
 

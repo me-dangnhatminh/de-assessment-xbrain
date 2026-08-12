@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-11T23:32:26.030704+00:00",
-  "index_path": "/mnt/data/Minh/Coding/de-assessment-xbrain/data/evidence/phase2/index.sqlite",
+  "generated_at": "2026-08-12T12:58:57.799151+00:00",
+  "index_path": "data/evidence/phase2/index.sqlite",
   "top_k": 5,
   "total_cases": 10,
   "summary": {

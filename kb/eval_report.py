@@ -14,6 +14,8 @@ from pathlib import Path
 
 from kb.eval_runner import EvalResult
 
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+
 # ---------------------------------------------------------------------------
 # Score → emoji for the Markdown report
 # ---------------------------------------------------------------------------
@@ -45,7 +47,9 @@ def render_eval_json(
 
     payload = {
         "generated_at": datetime.now(UTC).isoformat(),
-        "index_path": str(db_path),
+        "index_path": str(db_path.relative_to(REPOSITORY_ROOT))
+        if db_path.is_relative_to(REPOSITORY_ROOT)
+        else str(db_path),
         "top_k": top_k,
         "total_cases": len(results),
         "summary": _summary_stats(results),
@@ -113,7 +117,7 @@ def render_eval_report(
         "# KB Evaluation Report",
         "",
         f"**Generated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}  ",
-        f"**Index:** `{db_path}`  ",
+        f"**Index:** `{db_path.relative_to(REPOSITORY_ROOT) if db_path.is_relative_to(REPOSITORY_ROOT) else db_path}`  ",
         f"**Top-k:** {top_k}  ",
         f"**Total cases:** {len(results)}",
         "",

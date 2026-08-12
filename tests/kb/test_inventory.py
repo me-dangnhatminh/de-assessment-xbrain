@@ -35,13 +35,16 @@ def test_inventory_returns_document_objects() -> None:
         assert isinstance(doc, Document)
 
 
-def test_inventory_source_paths_are_absolute() -> None:
-    """Each Document.source_path is an absolute path string pointing to an existing file."""
+def test_inventory_source_paths_are_repo_relative() -> None:
+    """Each Document.source_path is a repo-relative path resolvable to an existing file."""
     docs = inventory_documents(DOCS_DIR)
+    from kb.inventory import REPOSITORY_ROOT
+
     for doc in docs:
         p = Path(doc.source_path)
-        assert p.is_absolute(), f"source_path not absolute: {doc.source_path}"
-        assert p.is_file(), f"source_path not a file: {doc.source_path}"
+        assert not p.is_absolute(), f"source_path should be relative: {doc.source_path}"
+        resolved = REPOSITORY_ROOT / p
+        assert resolved.is_file(), f"source_path not a file: {doc.source_path}"
 
 
 def test_inventory_doc_ids_parsed_from_filename() -> None:

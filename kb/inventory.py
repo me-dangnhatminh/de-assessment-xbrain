@@ -18,6 +18,8 @@ from pathlib import Path
 from kb.metadata import parse_metadata_line
 from kb.models import Document
 
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+
 # Parses "POL-01" from "POL-01_chinh_sach_backup_v2.md"
 _RE_DOC_ID = re.compile(r"^([A-Z]+-\d+)")
 
@@ -103,7 +105,7 @@ def inventory_documents(docs_dir: Path) -> list[Document]:
 
         documents.append(
             Document(
-                source_path=str(path),
+                source_path=str(path.relative_to(REPOSITORY_ROOT)),
                 doc_id=doc_id,
                 filename_version_hint=filename_version_hint,
                 sha256=sha256,

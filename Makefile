@@ -21,7 +21,7 @@ SYNC := @test -x .venv/bin/python && echo "uv is unavailable; using the existing
 LOCK_CHECK := @test -f uv.lock && echo "uv is unavailable; checked-in uv.lock present"
 endif
 
-.PHONY: sync integrity pipeline analysis report verify-phase1 phase1 clean-checkout-verify kb-build kb-search kb-eval phase2
+.PHONY: sync integrity pipeline analysis report verify-phase1 phase1 clean-checkout-verify kb-build kb-search kb-eval phase2 design-preflight design-trial design-report phase3 manifest audit-submission verify
 
 sync:
 	$(SYNC)
@@ -87,3 +87,21 @@ design-report:
 	$(PYTHON) -m design.bedrock report
 
 phase3: design-preflight design-trial design-report
+
+# ---------------------------------------------------------------------------
+# Phase 4: Submission verification & packaging
+# ---------------------------------------------------------------------------
+
+manifest:
+	$(PYTHON) scripts/make_manifest.py
+
+audit-submission:
+	$(PYTHON) scripts/audit_submission.py
+
+verify: phase1 phase2 design-report manifest
+	$(LOCK_CHECK)
+	$(RUFF) check .
+	$(RUFF) format --check --exclude .planning .
+	$(PYTEST) -q
+	git diff --exit-code -- docs/onboard
+	$(PYTHON) scripts/audit_submission.py --skip-tests

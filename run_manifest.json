@@ -1,0 +1,192 @@
+{
+  "commands": {
+    "audit-submission": "make audit-submission",
+    "design-report": "make design-report",
+    "manifest": "make manifest",
+    "phase1": "make phase1",
+    "phase2": "make phase2",
+    "verify": "make verify",
+    "verify-phase1": "make verify-phase1"
+  },
+  "deliverables": [
+    {
+      "path": "AI_WORKLOG.md",
+      "sha256": "47c7674556252fc71110bd7b0c88c3827439e8b1a7a1a4c08f9453f280f6eea4"
+    },
+    {
+      "path": "Makefile",
+      "sha256": "eef2a998e68a94db2155811879543ebd5a06c420e1a11ce4b4a0c56113297be2"
+    },
+    {
+      "path": "README.md",
+      "sha256": "f3b57631d921e49d25dad38d2654f4d528319fa54d0148d88cb87e3bdab7e194"
+    },
+    {
+      "path": "data/evidence/phase1/quality_ledger.jsonl",
+      "sha256": "a56211526936f9ec553f24418a62de057d202ebb10a194b13cf4173889dbffe9"
+    },
+    {
+      "path": "data/evidence/phase1/run_manifest.json",
+      "sha256": "15b8228a9c6caebf7c78faf8759d72c8ff9b88d4352384db0633198830867fe7"
+    },
+    {
+      "path": "data/evidence/phase2/chunks.jsonl",
+      "sha256": "395b46e4d3ac67f84c5c39ebd4c73af0722635453ce735e5d6b673820f64a10e"
+    },
+    {
+      "path": "data/evidence/phase2/eval_report.md",
+      "sha256": "890a9657daa4f9133db69b165201943df6916568ad36524c85693b043636efe0"
+    },
+    {
+      "path": "data/evidence/phase2/eval_results.json",
+      "sha256": "5be532f553f70f4d339e37855c7d178f2a2b64f82c4fd1d7de0022c1511041f3"
+    },
+    {
+      "path": "data/processed/logs_clean.parquet",
+      "sha256": "3e5504f12c573cf34b330b8741c36c6690f1bc73b041df2fe2e8cdb2031985dc"
+    },
+    {
+      "path": "design/ai_response_review.md",
+      "sha256": "e432ce76a0f71b4c7d320ac2354cbf650658eed081cbdfb416cd640be449a86b"
+    },
+    {
+      "path": "design/aws_daily_pipeline.md",
+      "sha256": "b284f820a1a5c86f73356844f19b6b48f3b7c557e28c5c02ec8d2c5f3da903cf"
+    },
+    {
+      "path": "design/aws_daily_pipeline.png",
+      "sha256": "87d849c82a55a3d6bd40f26b982ffdf5b9bc4adff4f8c1e2075a3ecfdd352365"
+    },
+    {
+      "path": "design/extraction_prompt.md",
+      "sha256": "7a40d598005846651166262a0f64ae5cb09b53c3d76c23cd3b589cdbc5c7bfa5"
+    },
+    {
+      "path": "design/output/eval_method.md",
+      "sha256": "49cea575375bcdd51b7c25f2427620712609207701da145ca8a9859ecdee1d70"
+    },
+    {
+      "path": "design/output/preflight_result.json",
+      "sha256": "5164d60b7b59e7630aff626ef1251e1570ef4cd55df48cebfdc41e6fc9c7a863"
+    },
+    {
+      "path": "design/output/trial_summary.md",
+      "sha256": "6acfbca0289e36e5f71dd45fcd57a4333cf5b7310bce4e89fbb86e20a53d3ccd"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "5c7e64b6d913f027f860c6ed76500ed65042018fb6efe6d2fb135ace43d77802"
+    },
+    {
+      "path": "sop/kb_update_sop.md",
+      "sha256": "aa8c8f39cfa02228b3d2f9ba959a932cc6e0de8d5bf43a96c16ca8dd0e124001"
+    },
+    {
+      "path": "uv.lock",
+      "sha256": "4730a9d36103fcb677a89694bad3b0340373eca41480d141ba577d7a9dcad481"
+    }
+  ],
+  "phases": {
+    "phase1_pipeline": {
+      "analyses": 4,
+      "artifacts": 9,
+      "row_counts": {
+        "accept": 2839,
+        "input": 2923,
+        "parquet": 2839,
+        "reject": 84,
+        "repair": 0
+      },
+      "run_id": "64c89b70113d26a1b65af8923ddcb3f0da2e5b878ac6aceee2d03aaa54fa31da",
+      "source_manifest_sha256": "ad6df37f769b5c09fdd9e00b31f469fa31242a43fb1112a6920220cdc4bbd5c6"
+    },
+    "phase2_kb": {
+      "chunks": 22,
+      "chunks_sha256": "395b46e4d3ac67f84c5c39ebd4c73af0722635453ce735e5d6b673820f64a10e",
+      "eval_cases": 10,
+      "eval_summary": {
+        "fail": 0,
+        "partial": 1,
+        "pass": 9
+      },
+      "index_sha256": "3484b0c735b0aea74ff7d3cf6040aa4ad219ef8c5dc980ffb04e7220e4779b99"
+    },
+    "phase3_bedrock": {
+      "boto3_version": "1.43.68",
+      "model_id": "amazon.nova-lite-v1:0",
+      "region": "ap-northeast-1",
+      "response_hashes": {
+        "tc01_raw.json": "38d907547c97b8c91e5de93f3a64685998f2c12aea30bec0d5acce7cf76d98f9",
+        "tc02_raw.json": "348aee68d775b3be9366fe802181b4c8688306a93b93bd2877f7cdeebf98318b",
+        "tc03_raw.json": "6dee95160ac22c49464920dc65a087d644326fae0e67f70c5aadfa505a1a8e29",
+        "tc04_raw.json": "ec4838b7c6ccb67ac09f559aec18c81606b1d5e94d3ca5ded3bf1785038207f2",
+        "tc05_raw.json": "ec68d413100d2af7ad818443d97739d4e66c459ea43ac984d36556832ff2b23f"
+      },
+      "trial_pass_rate": "3/5"
+    }
+  },
+  "run_id": "5cb245b47300b15ac65a786e64179d73d54e17821306483cc7829c753e5b455c",
+  "runtime": {
+    "duckdb": "1.5.5",
+    "python": "3.12.3",
+    "uv": "unavailable (not on PATH)"
+  },
+  "source_inventory": [
+    {
+      "path": "01_Domain_POC.md",
+      "sha256": "1ae8d2de18d6fe06e29adda9b866b5f389477f5b8348d608550fa10cd0bd276d"
+    },
+    {
+      "path": "02_AI_Proficiency.md",
+      "sha256": "db61a60a4cdc33b2c3d2a2fc47d41aaea6f0014a464af6c02a4f05ac7e23cbfb"
+    },
+    {
+      "path": "datapack/README.md",
+      "sha256": "323b35971e457300fd76655cb6501b5a8fb7be0bb10d7609bb9de23ad7f2b138"
+    },
+    {
+      "path": "datapack/data/app_logs_7days.jsonl",
+      "sha256": "f378486757df37c78fbabe4724d98260fe43ac61012c8f8588c50abc10499e1c"
+    },
+    {
+      "path": "datapack/data/docs/FAQ-01_loi_thuong_gap.md",
+      "sha256": "62385805aea80ce1f8b890a3bb554d7ab9b5737f7093eed3859a208e07547d8a"
+    },
+    {
+      "path": "datapack/data/docs/GUIDE-01_giam_sat_he_thong.md",
+      "sha256": "8f7879e5e999c8bda2b7e81e3ca2feaecf27f72a6b6ee23c6f1eb1701d4d8230"
+    },
+    {
+      "path": "datapack/data/docs/POL-01_chinh_sach_backup_v1.md",
+      "sha256": "6965466ce7da1cc41f33af7840b885da3897272d41ee5d54a52693327a440412"
+    },
+    {
+      "path": "datapack/data/docs/POL-01_chinh_sach_backup_v2.md",
+      "sha256": "28a7e118f152fec197cfcc248c61416db21a8f63200fc669d0c33f5a9c31a603"
+    },
+    {
+      "path": "datapack/data/docs/POL-02_chinh_sach_truy_cap.md",
+      "sha256": "ae7d5328c23f7f4014787fbf0ae0ccf52885b982492b11b2ec46377d231a5369"
+    },
+    {
+      "path": "datapack/data/docs/RUN-01_runbook_batch_report.md",
+      "sha256": "064824b9aad2b48e3810f135b1575e3d00fb68e77bc8c97c3fb43b9f222f8fed"
+    },
+    {
+      "path": "datapack/data/docs/SOP-01_khoi_dong_lai_dich_vu.md",
+      "sha256": "3ce60eb0622c2bf4e043f9c5f9d982a7d481a53517b1197847ebaa4f7013dfc5"
+    },
+    {
+      "path": "datapack/data/docs/SOP-02_quy_trinh_escalation.md",
+      "sha256": "e524d222d468f8df4ed6870afa3edd74817ffdc2b9e889ff7977a706ce572b1f"
+    },
+    {
+      "path": "datapack/reading/01_chunking_basics.md",
+      "sha256": "edb104d16d0ea7dc7c1d267c9701e017f7c2624c8b07679e261cb6a32eb97134"
+    },
+    {
+      "path": "datapack/reading/02_rag_eval_basics.md",
+      "sha256": "c80a4b7ebc8b32a803df90c79670e0425aeafe773010e22aedce42b1e0a1960e"
+    }
+  ]
+}

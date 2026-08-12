@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
+from pipeline.integrity import REPOSITORY_ROOT
 from pipeline.models import Disposition, Issue, SourceEnvelope
 
 DEFAULT_MAX_LINE_BYTES = 1_048_576
@@ -46,6 +47,11 @@ def iter_source_lines(
         raise ValueError("max_line_bytes must be a positive integer")
 
     resolved_path = input_path.expanduser().resolve()
+    # Store repo-relative path in evidence artifacts for portability (no machine paths).
+    try:
+        display_path = str(resolved_path.relative_to(REPOSITORY_ROOT))
+    except ValueError:
+        display_path = str(resolved_path)
     source_sha256 = _sha256_file(resolved_path)
     with resolved_path.open("rb") as source:
         for source_line, raw_bytes in enumerate(source, start=1):
@@ -74,7 +80,7 @@ def iter_source_lines(
                         ),
                     )
             yield SourceEnvelope(
-                source_path=str(resolved_path),
+                source_path=display_path,
                 source_sha256=source_sha256,
                 source_line=source_line,
                 raw_line=raw_line,
