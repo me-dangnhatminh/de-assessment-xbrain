@@ -20,10 +20,10 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-08-11)
+See: .planning/PROJECT.md (updated 2026-08-12)
 
 **Core value:** Every claimed result must be reproducible, source-grounded, and understandable enough for the candidate to defend in a technical interview.
-**Current focus:** Phase 02 — version-aware-knowledge-base-evaluation
+**Current focus:** Phase 03 — AWS Design & Bedrock Extraction Evidence
 
 ## Current Position
 

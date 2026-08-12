@@ -17,16 +17,16 @@ Every claimed result must be reproducible, source-grounded, and understandable e
 - [x] Build a local Python pipeline that ingests `app_logs_7days.jsonl`, detects data-quality issues, applies explicit validation and cleaning decisions, and preserves the original input unchanged. — Validated in Phase 1: Auditable Log Pipeline & Analysis
 - [x] Store the cleaned logs in a justified structured format and produce executable SQL or pandas analysis with recorded results for all four customer questions. — Validated in Phase 1: Auditable Log Pipeline & Analysis
 - [x] Document how many records were rejected or repaired, grouped by data-quality issue and supported by pipeline evidence. — Validated in Phase 1: Auditable Log Pipeline & Analysis
+- [x] Build a searchable knowledge base from all eight supplied operational documents after applying the provided chunking and RAG-evaluation guidance. — Validated in Phase 2: Version-Aware Knowledge Base & Evaluation
+- [x] Preserve source, section, version, effective date, and ownership metadata so retrieved content is attributable and version conflicts can be resolved deterministically. — Validated in Phase 2: Version-Aware Knowledge Base & Evaluation
+- [x] Identify the conflicting documents and ensure retrieval favors the current effective version without erasing historical provenance. — Validated in Phase 2: Version-Aware Knowledge Base & Evaluation
+- [x] Create ten knowledge-base evaluation questions spanning direct lookup, multi-source synthesis, version traps, and out-of-scope refusal, each with an expected answer, source, and pass/fail criteria. — Validated in Phase 2: Version-Aware Knowledge Base & Evaluation
+- [x] Execute and report at least three knowledge-base evaluation cases, separating retrieval quality from answer groundedness. — Validated in Phase 2: Version-Aware Knowledge Base & Evaluation
+- [x] Write an English, one-page-or-shorter SOP covering document additions and revisions, re-indexing, validation, frequency, ownership, and approval. — Validated in Phase 2: Version-Aware Knowledge Base & Evaluation
 
 ### Active
 
 - [ ] Produce an AWS daily-pipeline architecture diagram and an English explanation of no more than one page, including data flow, service choices, IAM considerations, and explicit uncertainties.
-- [ ] Build a searchable knowledge base from all eight supplied operational documents after applying the provided chunking and RAG-evaluation guidance.
-- [ ] Preserve source, section, version, effective date, and ownership metadata so retrieved content is attributable and version conflicts can be resolved deterministically.
-- [ ] Identify the conflicting documents and ensure retrieval favors the current effective version without erasing historical provenance.
-- [ ] Create ten knowledge-base evaluation questions spanning direct lookup, multi-source synthesis, version traps, and out-of-scope refusal, each with an expected answer, source, and pass/fail criteria.
-- [ ] Execute and report at least three knowledge-base evaluation cases, separating retrieval quality from answer groundedness.
-- [ ] Write an English, one-page-or-shorter SOP covering document additions and revisions, re-indexing, validation, frequency, ownership, and approval.
 - [ ] Maintain an English `AI_WORKLOG.md` with 8–15 meaningful entries recording the task, prompt, output assessment, verification, and corrections for AI-assisted work that affects the submission.
 - [ ] Write an English, one-page-or-shorter review that identifies every incorrect or misleading claim in the supplied AI response, explains the correction, and cites authoritative verification sources.
 - [ ] Design an English, two-page-or-shorter prompt for extracting free-text log messages into a strict JSON schema, with explicit missing/ambiguous-value behavior and no unsupported inference.
@@ -96,4 +96,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-08-11 after Phase 1 completion (Auditable Log Pipeline & Analysis — 30/30 verified)*
+*Last updated: 2026-08-12 after Phase 2 completion (Version-Aware Knowledge Base & Evaluation — 5/5 verified)*
