@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1"
+              tooltips="1" connect="1" arrows="1" fold="1"
+              page="1" pageScale="1" pageWidth="1169" pageHeight="827"
+              math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- ================================================================== -->
+    <!-- IAM Boundary: Ingestion Role                                        -->
+    <!-- ================================================================== -->
+    <mxCell id="2" value="Ingestion Role&#xa;s3:PutObject (raw only)"
+            style="dashed=1;fillColor=none;strokeColor=#FF8000;fontStyle=1;fontSize=11;verticalAlign=top;align=left;"
+            vertex="1" parent="1">
+      <mxGeometry x="30" y="60" width="220" height="130" as="geometry" />
+    </mxCell>
+
+    <!-- Daily Source / Batch (inside Ingestion Role boundary) -->
+    <mxCell id="3" value="Daily Source / Batch"
+            style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;"
+            vertex="1" parent="1">
+      <mxGeometry x="60" y="120" width="160" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- ================================================================== -->
+    <!-- S3 Raw Bucket                                                       -->
+    <!-- ================================================================== -->
+    <mxCell id="4" value="S3 Raw&#xa;(raw prefix)"
+            style="shape=mxgraph.aws4.s3;fillColor=#FF9900;strokeColor=#FF9900;fontColor=#ffffff;fontStyle=1;fontSize=11;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;"
+            vertex="1" parent="1">
+      <mxGeometry x="340" y="120" width="78" height="78" as="geometry" />
+    </mxCell>
+
+    <!-- ================================================================== -->
+    <!-- IAM Boundary: Glue ETL Role                                        -->
+    <!-- ================================================================== -->
+    <mxCell id="5" value="Glue ETL Role&#xa;s3:GetObject (raw), s3:PutObject (curated + quarantine), glue:*"
+            style="dashed=1;fillColor=none;strokeColor=#00AA00;fontStyle=1;fontSize=10;verticalAlign=top;align=left;"
+            vertex="1" parent="1">
+      <mxGeometry x="500" y="50" width="290" height="400" as="geometry" />
+    </mxCell>
+
+    <!-- Glue ETL Job (inside Glue ETL Role boundary) -->
+    <mxCell id="6" value="Glue ETL&#xa;(validate + transform)"
+            style="shape=mxgraph.aws4.glue;fillColor=#8C4FFF;strokeColor=#8C4FFF;fontColor=#ffffff;fontStyle=1;fontSize=11;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;"
+            vertex="1" parent="1">
+      <mxGeometry x="580" y="120" width="78" height="78" as="geometry" />
+    </mxCell>
+
+    <!-- S3 Quarantine (inside Glue ETL Role boundary) -->
+    <mxCell id="7" value="S3 Quarantine&#xa;(dead-letter)"
+            style="shape=mxgraph.aws4.s3;fillColor=#FF0000;strokeColor=#FF0000;fontColor=#ffffff;fontStyle=1;fontSize=11;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;"
+            vertex="1" parent="1">
+      <mxGeometry x="580" y="300" width="78" height="78" as="geometry" />
+    </mxCell>
+
+    <!-- S3 Curated (inside Glue ETL Role boundary) -->
+    <mxCell id="8" value="S3 Curated&#xa;(parquet)"
+            style="shape=mxgraph.aws4.s3;fillColor=#00AA00;strokeColor=#00AA00;fontColor=#ffffff;fontStyle=1;fontSize=11;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;"
+            vertex="1" parent="1">
+      <mxGeometry x="690" y="120" width="78" height="78" as="geometry" />
+    </mxCell>
+
+    <!-- ================================================================== -->
+    <!-- IAM Boundary: Athena Query Role                                    -->
+    <!-- ================================================================== -->
+    <mxCell id="9" value="Athena Query Role&#xa;s3:GetObject (curated), s3:PutObject (results), glue:GetTable"
+            style="dashed=1;fillColor=none;strokeColor=#0066CC;fontStyle=1;fontSize=10;verticalAlign=top;align=left;"
+            vertex="1" parent="1">
+      <mxGeometry x="830" y="50" width="290" height="280" as="geometry" />
+    </mxCell>
+
+    <!-- Glue Data Catalog (inside Athena Query Role boundary) -->
+    <mxCell id="10" value="Glue Data Catalog"
+            style="rounded=1;whiteSpace=wrap;html=1;fillColor=#8C4FFF;strokeColor=#8C4FFF;fontColor=#ffffff;fontStyle=1;fontSize=11;"
+            vertex="1" parent="1">
+      <mxGeometry x="860" y="120" width="140" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- Amazon Athena (inside Athena Query Role boundary) -->
+    <mxCell id="11" value="Amazon Athena"
+            style="shape=mxgraph.aws4.athena;fillColor=#8C4FFF;strokeColor=#8C4FFF;fontColor=#ffffff;fontStyle=1;fontSize=11;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;"
+            vertex="1" parent="1">
+      <mxGeometry x="900" y="220" width="78" height="78" as="geometry" />
+    </mxCell>
+
+    <!-- ================================================================== -->
+    <!-- CloudWatch (monitoring, outside IAM role boxes but in diagram)     -->
+    <!-- ================================================================== -->
+    <mxCell id="12" value="CloudWatch"
+            style="shape=mxgraph.aws4.cloudwatch;fillColor=#E7157B;strokeColor=#E7157B;fontColor=#ffffff;fontStyle=1;fontSize=11;labelPosition=center;verticalLabelPosition=bottom;align=center;verticalAlign=top;"
+            vertex="1" parent="1">
+      <mxGeometry x="580" y="500" width="78" height="78" as="geometry" />
+    </mxCell>
+
+    <!-- ================================================================== -->
+    <!-- ? Annotation Cells                                                  -->
+    <!-- ================================================================== -->
+    <mxCell id="13" value="? ingestion trigger: Lambda vs EventBridge + Glue schedule"
+            style="text;html=1;strokeColor=#FF8000;fillColor=#FFF9E6;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=10;fontStyle=2;"
+            vertex="1" parent="1">
+      <mxGeometry x="30" y="220" width="220" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="14" value="? network: VPC or public endpoint"
+            style="text;html=1;strokeColor=#FF8000;fillColor=#FFF9E6;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=10;fontStyle=2;"
+            vertex="1" parent="1">
+      <mxGeometry x="340" y="240" width="120" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="15" value="? results bucket: separate or share curated prefix"
+            style="text;html=1;strokeColor=#FF8000;fillColor=#FFF9E6;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=10;fontStyle=2;"
+            vertex="1" parent="1">
+      <mxGeometry x="830" y="340" width="220" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="16" value="? data volume: cost model not validated"
+            style="text;html=1;strokeColor=#FF8000;fillColor=#FFF9E6;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=10;fontStyle=2;"
+            vertex="1" parent="1">
+      <mxGeometry x="30" y="290" width="220" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- ================================================================== -->
+    <!-- Connectors / Edges                                                  -->
+    <!-- ================================================================== -->
+
+    <!-- Daily Source → S3 Raw: "daily batch upload" -->
+    <mxCell id="17" value="daily batch upload"
+            style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=10;"
+            edge="1" source="3" target="4" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- S3 Raw → Glue ETL: "trigger / poll" -->
+    <mxCell id="18" value="trigger / poll"
+            style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;"
+            edge="1" source="4" target="6" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Glue ETL → S3 Curated: "valid records" -->
+    <mxCell id="19" value="valid records"
+            style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;"
+            edge="1" source="6" target="8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Glue ETL → S3 Quarantine: "failed records" (dashed red) -->
+    <mxCell id="20" value="failed records"
+            style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;strokeColor=#FF0000;fontColor=#FF0000;fontSize=10;"
+            edge="1" source="6" target="7" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- S3 Curated → Glue Data Catalog: "register partitions" -->
+    <mxCell id="21" value="register partitions"
+            style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;"
+            edge="1" source="8" target="10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Glue Data Catalog → Athena: "metadata" -->
+    <mxCell id="22" value="metadata"
+            style="edgeStyle=orthogonalEdgeStyle;html=1;fontSize=10;"
+            edge="1" source="10" target="11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Glue ETL → CloudWatch: "job failure alarm" (dashed) -->
+    <mxCell id="23" value="job failure alarm"
+            style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;strokeColor=#E7157B;fontColor=#E7157B;fontSize=10;"
+            edge="1" source="6" target="12" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>
