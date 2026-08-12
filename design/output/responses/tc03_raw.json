@@ -1,0 +1,50 @@
+{
+  "case_id": "tc03",
+  "message": "Report row mismatch expected=843 got=759",
+  "raw_response": {
+    "ResponseMetadata": {
+      "RequestId": "20adbd3e-85b0-43e1-8c3a-6c2fac1dfe21",
+      "HTTPStatusCode": 200,
+      "HTTPHeaders": {
+        "date": "Wed, 12 Aug 2026 10:46:55 GMT",
+        "content-type": "application/json",
+        "content-length": "408",
+        "connection": "keep-alive",
+        "x-amzn-requestid": "20adbd3e-85b0-43e1-8c3a-6c2fac1dfe21"
+      },
+      "RetryAttempts": 0
+    },
+    "output": {
+      "message": {
+        "role": "assistant",
+        "content": [
+          {
+            "text": "```json\n{\n  \"event_type\": \"DATA_MISMATCH\",\n  \"component\": null,\n  \"parameters\": {\"expected\": \"843\", \"got\": \"759\"},\n  \"confidence\": \"high\",\n  \"parse_status\": \"success\"\n}\n```"
+          }
+        ]
+      }
+    },
+    "stopReason": "end_turn",
+    "usage": {
+      "inputTokens": 816,
+      "outputTokens": 61,
+      "totalTokens": 877
+    },
+    "metrics": {
+      "latencyMs": 294
+    }
+  },
+  "metadata": {
+    "model_id": "amazon.nova-lite-v1:0",
+    "region": "ap-northeast-1",
+    "boto3_version": "1.43.68",
+    "prompt_sha256": "afbb5c65b63ab88ff668a930cf525a7a923642d3daa371161c08eed12545932f",
+    "request_timestamp_utc": "2026-08-12T10:46:55.169798Z",
+    "response_latency_ms": 413,
+    "input_tokens": 816,
+    "output_tokens": 61,
+    "stop_reason": "end_turn",
+    "temperature": 0.0,
+    "max_tokens": 512
+  }
+}

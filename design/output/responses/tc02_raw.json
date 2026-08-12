@@ -1,0 +1,50 @@
+{
+  "case_id": "tc02",
+  "message": "ERR PaymentDeclined txn=t811163 code=51",
+  "raw_response": {
+    "ResponseMetadata": {
+      "RequestId": "9bd2a4f9-5a04-40e5-843d-c59f47d37dc3",
+      "HTTPStatusCode": 200,
+      "HTTPHeaders": {
+        "date": "Wed, 12 Aug 2026 10:46:55 GMT",
+        "content-type": "application/json",
+        "content-length": "410",
+        "connection": "keep-alive",
+        "x-amzn-requestid": "9bd2a4f9-5a04-40e5-843d-c59f47d37dc3"
+      },
+      "RetryAttempts": 0
+    },
+    "output": {
+      "message": {
+        "role": "assistant",
+        "content": [
+          {
+            "text": "```json\n{\n  \"event_type\": \"PAYMENT_DECLINED\",\n  \"component\": null,\n  \"parameters\": {\"txn\": \"t811163\", \"code\": \"51\"},\n  \"confidence\": \"high\",\n  \"parse_status\": \"success\"\n}\n```"
+          }
+        ]
+      }
+    },
+    "stopReason": "end_turn",
+    "usage": {
+      "inputTokens": 822,
+      "outputTokens": 65,
+      "totalTokens": 887
+    },
+    "metrics": {
+      "latencyMs": 338
+    }
+  },
+  "metadata": {
+    "model_id": "amazon.nova-lite-v1:0",
+    "region": "ap-northeast-1",
+    "boto3_version": "1.43.68",
+    "prompt_sha256": "49914eb50729ac225041913bec039ea722ff2ad062d3768a75e20070fba7cf38",
+    "request_timestamp_utc": "2026-08-12T10:46:54.712619Z",
+    "response_latency_ms": 456,
+    "input_tokens": 822,
+    "output_tokens": 65,
+    "stop_reason": "end_turn",
+    "temperature": 0.0,
+    "max_tokens": 512
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "case_id": "tc01",
+  "message": "ERR ConnTimeout db-primary after 30s retry=3",
+  "raw_response": {
+    "ResponseMetadata": {
+      "RequestId": "653aab5b-0d08-4994-92da-c131a5bc7f20",
+      "HTTPStatusCode": 200,
+      "HTTPHeaders": {
+        "date": "Wed, 12 Aug 2026 10:46:54 GMT",
+        "content-type": "application/json",
+        "content-length": "400",
+        "connection": "keep-alive",
+        "x-amzn-requestid": "653aab5b-0d08-4994-92da-c131a5bc7f20"
+      },
+      "RetryAttempts": 0
+    },
+    "output": {
+      "message": {
+        "role": "assistant",
+        "content": [
+          {
+            "text": "```json\n{\n  \"event_type\": \"CONNECTION_TIMEOUT\",\n  \"component\": \"db-primary\",\n  \"parameters\": {\"retry\": \"3\"},\n  \"confidence\": \"high\",\n  \"parse_status\": \"success\"\n}\n```"
+          }
+        ]
+      }
+    },
+    "stopReason": "end_turn",
+    "usage": {
+      "inputTokens": 818,
+      "outputTokens": 53,
+      "totalTokens": 871
+    },
+    "metrics": {
+      "latencyMs": 304
+    }
+  },
+  "metadata": {
+    "model_id": "amazon.nova-lite-v1:0",
+    "region": "ap-northeast-1",
+    "boto3_version": "1.43.68",
+    "prompt_sha256": "69f1c5f00b0947ddbe697df3df03c5e588795b309ee256268855551d84f8b00a",
+    "request_timestamp_utc": "2026-08-12T10:46:52.312598Z",
+    "response_latency_ms": 2398,
+    "input_tokens": 818,
+    "output_tokens": 53,
+    "stop_reason": "end_turn",
+    "temperature": 0.0,
+    "max_tokens": 512
+  }
+}

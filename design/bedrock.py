@@ -138,12 +138,31 @@ def run_trial_case(
         return {"error": str(exc), "output": None, "_latency_ms": 0}
 
 
+def _strip_code_fence(text: str) -> str:
+    """Strip markdown code fences (```json ... ``` or ``` ... ```) from model output."""
+    text = text.strip()
+    if text.startswith("```"):
+        # Remove opening fence line (e.g. ```json or ```)
+        first_newline = text.find("\n")
+        if first_newline != -1:
+            text = text[first_newline + 1 :]
+        # Remove closing fence
+        if text.rstrip().endswith("```"):
+            text = text.rstrip()[:-3].rstrip()
+    return text.strip()
+
+
 def validate_extraction_output(raw_text: str) -> tuple[dict[str, Any] | None, list[str]]:
-    """Parse *raw_text* as JSON and validate against EXTRACTION_SCHEMA."""
+    """Parse *raw_text* as JSON and validate against EXTRACTION_SCHEMA.
+
+    Strips markdown code fences before parsing — handles models that wrap
+    JSON in ```json ... ``` despite instructions to return plain JSON.
+    """
     from design.schema import validate_extraction
 
+    cleaned = _strip_code_fence(raw_text)
     try:
-        parsed = json.loads(raw_text)
+        parsed = json.loads(cleaned)
     except json.JSONDecodeError:
         return None, ["output is not valid JSON"]
     errors = validate_extraction(parsed)
