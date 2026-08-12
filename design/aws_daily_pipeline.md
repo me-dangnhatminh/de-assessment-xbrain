@@ -1,6 +1,6 @@
 # AWS Daily Log Pipeline — Architecture Explanation
 
-> PNG export pending — open `aws_daily_pipeline.drawio` at https://app.diagrams.net to render and export as PNG.
+> Rendered export: `aws_daily_pipeline.png`. Source: `aws_daily_pipeline.drawio` (open at https://app.diagrams.net to edit).
 
 ## Architecture Overview
 
